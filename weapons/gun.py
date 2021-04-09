@@ -9,7 +9,7 @@ class bullet():
         self.HP=100 #生命值
         self.speed=1 #移动速度
         self.name="bullet" #名称
-        self.hit_area=2000 #攻击目标
+        self.hit_area=2000 #攻击范围
         self.start_pos=position #初始位置
         self.curr_pos=position #当前位置
         self.shoot=False #是否发射
