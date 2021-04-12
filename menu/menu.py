@@ -2,8 +2,8 @@ import pygame
 
 pygame.font.init()
 
-star = pygame.transform.scale(pygame.image.load('./source/img/menu/bg.png').convert_alpha(), (50,50))
-star2 = pygame.transform.scale(pygame.image.load('./source/img/menu/bg.png').convert_alpha(), (20,20))
+star = pygame.transform.scale(pygame.image.load('./source/img/menu/bg.png'), (50,50))
+star2 = pygame.transform.scale(pygame.image.load('./source/img/menu/bg.png'), (20,20))
 
 
 class Button:
