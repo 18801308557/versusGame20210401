@@ -1,7 +1,7 @@
 import random
 from positionFunc import *
 from shell import *
-class general_shell(shell):
+class general_shell(shell):#一般炮弹
     def __init__(self,position,target,launchTime,disturbFlag):
         #初始位置，攻击目标，发射时间，是否开启探测
         self.visible=True #是否可见
