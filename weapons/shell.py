@@ -8,7 +8,8 @@ class shell():   #炮弹
         self.target=target #攻击目标
         self.HP=100 #最大生命值
         self.curr_HP=100#当前生命值
-        self.injureNum=0 #导弹毁伤，损毁的数量
+        self.maxNum=100 #导弹最大数量为100，即初始值
+        self.injureNum=0 #导弹毁伤，损毁或消耗的数量
         self.speed=1 #移动速度
         self.name=["general_shell","inercept_shell","vision_shell"] #导弹的种类名称
         self.start_pos=position #初始位置
@@ -20,7 +21,6 @@ class shell():   #炮弹
         self.missRandomPropable=random.random()  #随机生成打不中的概率
         self.R=120 #概率半径  命中半径
         self.hitPropable=0 #命中概率，杀伤概率
-        #属性按照需要自行增删改...
 
 
     #计算命中概率
@@ -35,12 +35,18 @@ class shell():   #炮弹
         else:
             self.hitPropable=0.01
 
-    #移动函数
+    #炮弹移动，更新位置信息，命中概率
     def movePosition(self,position):
         if(self.disturbFlag):
-            self.R=self.R*3/4  #  半径降低1/4
+            self.R=self.R*5/4  #  命中半径增大1/4，命中概率增大
         self.curr_pos=position #更新位置
         self.calPossibility(self)#计算命中概率
         #逻辑描述：判断是否有探测功能，若有探测，则误差半径逐步降低，否则不变，逐步计算下一步位置，更新位置，概率，计算总移动距离等。
 
-    #
+
+    #生成炮弹，炮弹激活
+
+
+
+
+    #炮弹发射后，炮弹删除
