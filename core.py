@@ -126,17 +126,35 @@ class CharWalk:
         # 角色下一步需要去的格子
         self.next_mx = 0
         self.next_my = 0
+        #终点
+        self.dest_mx = 0
+        self.dest_my = 0
         # 步长
         self.step = 2  # 每帧移动的像素
         # 寻路路径
         self.path = []
         # 当前路径下标
         self.path_index = 0
+        self.set_dest = False
+        self.has_showed = False
 
     def draw(self, screen_surf, map_x, map_y):
         cell_x = self.char_id % 12 + int(self.frame)
         cell_y = self.char_id // 12 + self.dir
         Sprite.draw(screen_surf, self.hero_surf, map_x + self.x, map_y + self.y, cell_x, cell_y)
+
+    def show(self,x,y):
+        self.mx = x
+        self.my = y
+        self.x = self.mx * 32  # 角色相对于地图的坐标
+        self.y = self.my * 32
+
+    def get_clicked(self,X,Y):
+        if X <= self.x + 32 and X >= self.x:
+            if Y <= self.y + 32 and Y >= self.y:
+
+                return True
+        return False
 
     def goto(self, x, y):
         """
@@ -217,8 +235,12 @@ class CharWalk:
         """
         start_point = (self.mx, self.my)
         path = AStar(map2d, start_point, end_point).start()
+
+
         if path is None:
+
             return
 
         self.path = path
+
         self.path_index = 0
