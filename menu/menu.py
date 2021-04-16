@@ -66,7 +66,7 @@ class PlayPauseButton(Button):
             win.blit(self.pause, (self.x, self.y))
 
 
-class VerticalButton(Button):
+class horizontalButton(Button):
     """
     Button class for menu objects
     """
@@ -148,9 +148,9 @@ class Menu:
             btn.update()
 
 
-class VerticalMenu(Menu):
+class horizontalMenu(Menu):
     """
-    Vertical Menu for side bar of game
+    horizontal Menu for side bar of game
     """
     def __init__(self, x, y, img):
         self.x = x
@@ -170,9 +170,9 @@ class VerticalMenu(Menu):
         :return: None
         """
         self.items += 1
-        btn_x = self.x - 40
-        btn_y = self.y-100 + (self.items-1)*120
-        self.buttons.append(VerticalButton(btn_x, btn_y, img, name, cost))
+        btn_x = self.x + (self.items-1)*(img.get_width()+10)
+        btn_y = self.y-10
+        self.buttons.append(horizontalButton(btn_x, btn_y, img, name, cost))
 
     def get_item_cost(self, name):
         """
@@ -194,9 +194,9 @@ class VerticalMenu(Menu):
         win.blit(self.bg, (self.x, self.y))
         for item in self.buttons:
             item.draw(win)
-            win.blit(star2, (item.x+2, item.y + item.height))
+            #win.blit(star2, (item.x+2, item.y + item.height))
             text = self.font.render(str(item.cost), 1, (255,255,255))
-            win.blit(text, (item.x + item.width/2 - text.get_width()/2 + 7, item.y + item.height + 5))
+            win.blit(text, (item.x + item.width/2 - text.get_width()/2, item.y + item.height))
 
 
 
