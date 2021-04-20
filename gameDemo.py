@@ -1,8 +1,8 @@
 import sys
 import os
 import pygame
-
-from core import GameMap, CharWalk, Sprite
+from Map import GameMap
+from core import CharWalk, Sprite
 from menu.menu import horizontalMenu
 
 side_img = pygame.transform.scale(pygame.image.load("./source/img/menu/bg1.png"), (640, 70))
@@ -101,7 +101,7 @@ class Game:
                 mx = (mouse_x - self.game_map.x) // 32
                 my = (mouse_y - self.game_map.y) // 32
                 if self.moving_object:
-                    print("check1")
+
                     self.role_list.append(self.moving_object)
                     # self.role.show(mx,my)
                     self.moving_object = None
@@ -129,7 +129,7 @@ class Game:
                         self.add_weapon(side_menu_button)
 
                     for set_role in self.candidate_list:
-                        print(set_role.next_mx, set_role.next_my)
+
                         set_role.find_path(self.game_map, (set_role.dest_mx, set_role.dest_my))
 
     def add_weapon(self, name):
