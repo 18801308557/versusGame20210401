@@ -1,4 +1,4 @@
-import pygame
+
 
 from astar import AStar
 
@@ -23,77 +23,6 @@ class Sprite:
         :return:
         """
         dest.blit(source, (x, y), (cell_x * cell_w, cell_y * cell_h, cell_w, cell_h))
-
-
-class Array2D:
-    """
-        说明：
-            1.构造方法需要两个参数，即二维数组的宽和高
-            2.成员变量w和h是二维数组的宽和高
-            3.使用：‘对象[x][y]’可以直接取到相应的值
-            4.数组的默认值都是0
-    """
-
-    def __init__(self, w, h, default=0):
-        self.w = w
-        self.h = h
-        self.data = []
-        self.data = [[default for y in range(h)] for x in range(w)]
-
-    def show_array2d(self):
-        for y in range(self.h):
-            for x in range(self.w):
-                print(self.data[x][y], end=' ')
-            print("")
-
-    def __getitem__(self, item):
-        return self.data[item]
-
-
-class GameMap(Array2D):
-    """
-    游戏地图类
-    """
-
-    def __init__(self, bottom, top, x, y):
-        # 将地图划分成w*h个小格子，每个格子32*32像素
-        w = int(bottom.get_width() / 32)
-        h = int(bottom.get_height() / 32)
-        super().__init__(w, h)
-        self.bottom = bottom
-        self.top = top
-        self.x = x
-        self.y = y
-
-    def draw_bottom(self, screen_surf):
-        screen_surf.blit(self.bottom, (self.x, self.y))
-
-    def draw_top(self, screen_surf):
-        screen_surf.blit(self.top, (self.x, self.y))
-
-    def draw_grid(self, screen_surf):
-        """
-        画网格
-        """
-        for x in range(self.w):
-            for y in range(self.h):
-                if self[x][y] == 0:  # 不是障碍，画空心的矩形
-                    pygame.draw.rect(screen_surf, (255, 255, 255), (self.x + x * 32, self.y + y * 32, 32, 32), 1)
-                else:  # 是障碍，画黑色实心的矩形
-                    pygame.draw.rect(screen_surf, (0, 0, 0), (self.x + x * 32 + 1, self.y + y * 32 + 1, 30, 30), 0)
-
-    def load_walk_file(self, path):
-        """
-        读取可行走区域文件
-        """
-        with open(path, 'r') as file:
-            for x in range(self.w):
-                for y in range(self.h+1):
-
-                    v = int(file.readline())
-                    if y!=self.h:
-                        self[x][y] = v
-        # self.show_array2d()
 
 
 class CharWalk:
@@ -126,17 +55,35 @@ class CharWalk:
         # 角色下一步需要去的格子
         self.next_mx = 0
         self.next_my = 0
+        #终点
+        self.dest_mx = 0
+        self.dest_my = 0
         # 步长
         self.step = 2  # 每帧移动的像素
         # 寻路路径
         self.path = []
         # 当前路径下标
         self.path_index = 0
+        self.set_dest = False
+        self.has_showed = False
 
     def draw(self, screen_surf, map_x, map_y):
         cell_x = self.char_id % 12 + int(self.frame)
         cell_y = self.char_id // 12 + self.dir
         Sprite.draw(screen_surf, self.hero_surf, map_x + self.x, map_y + self.y, cell_x, cell_y)
+
+    def show(self,x,y):
+        self.mx = x
+        self.my = y
+        self.x = self.mx * 32  # 角色相对于地图的坐标
+        self.y = self.my * 32
+
+    def get_clicked(self,X,Y):
+        if X <= self.x + 32 and X >= self.x:
+            if Y <= self.y + 32 and Y >= self.y:
+
+                return True
+        return False
 
     def goto(self, x, y):
         """
@@ -217,8 +164,12 @@ class CharWalk:
         """
         start_point = (self.mx, self.my)
         path = AStar(map2d, start_point, end_point).start()
+
+
         if path is None:
+
             return
 
         self.path = path
+
         self.path_index = 0
