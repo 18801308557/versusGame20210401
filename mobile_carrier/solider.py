@@ -1,5 +1,9 @@
-import random
+
 from positionFunc import *
+
+
+
+
 
 class solider:
     def __init__(self,position,camp,soliderNum,oneHitNum,speed=0):

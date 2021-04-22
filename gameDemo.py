@@ -1,21 +1,18 @@
 import sys
 import os
 import pygame
-from Map import GameMap
-from core import CharWalk, Sprite
+
+from mobile_carrier.solder_new import GameMap, CharWalk, Sprite
 from menu.menu import horizontalMenu
 
 side_img = pygame.transform.scale(pygame.image.load("./source/img/menu/bg1.png"), (640, 70))
-vertical_img = pygame.transform.scale(pygame.image.load("./source/img/menu/vbg.png"), (70,640))
 Blue_solder = pygame.transform.scale(pygame.image.load("./source/img/menu/Blue_solder.png"), (64, 64))
 Blue_weapon2 = pygame.transform.scale(pygame.image.load("./source/img/menu/Blue_weapon2.png"), (64, 64))
 Blue_weapon3 = pygame.transform.scale(pygame.image.load("./source/img/menu/Blue_weapon3.png"), (64, 64))
 Red_solder = pygame.transform.scale(pygame.image.load("./source/img/menu/Red_solder.png"), (64, 64))
 Red_weapon2 = pygame.transform.scale(pygame.image.load("./source/img/menu/Red_weapon2.png"), (64, 64))
 Red_weapon1 = pygame.transform.scale(pygame.image.load("./source/img/menu/weapon1.png"), (64, 64))
-Start_button = pygame.transform.scale(pygame.image.load("./source/img/menu/start.png"), (64, 64))
-pause_button = pygame.transform.scale(pygame.image.load("./source/img/menu/pause.png"), (64, 64))
-other_button = pygame.transform.scale(pygame.image.load("./source/img/menu/othersetting.png"), (64, 64))
+
 
 class Game:
     def __init__(self, title, width, height, fps=60):
@@ -33,19 +30,14 @@ class Game:
 
         self.__init_pygame()
         self.__init_game()
-        self.horizonMenu = horizontalMenu(0, self.height - side_img.get_height(), side_img,'horizon')
-        self.horizonMenu.add_btn(Blue_solder, "Blue_solder", 200)
-        self.horizonMenu.add_btn(Blue_weapon2, "Blue_weapon2", 200)
-        self.horizonMenu.add_btn(Blue_weapon3, "Blue_weapon3", 200)
-        self.horizonMenu.add_btn(Red_solder, "Red_solder", 200)
-        self.horizonMenu.add_btn(Red_weapon1, "Red_weapon1", 200)
-        self.horizonMenu.add_btn(Red_weapon2, "Red_weapon2", 200)
 
-        self.verticalMenu = horizontalMenu(self.width-vertical_img.get_width(),0,vertical_img,'vertical')
-
-        self.verticalMenu.add_btn(Start_button,"start",0)
-        self.verticalMenu.add_btn(pause_button,"pause",0)
-        self.verticalMenu.add_btn(other_button,"other",0)
+        self.menu = horizontalMenu(self.width - side_img.get_width(), self.height - side_img.get_height(), side_img)
+        self.menu.add_btn(Blue_solder, "Blue_solder", 200)
+        self.menu.add_btn(Blue_weapon2, "Blue_weapon2", 200)
+        self.menu.add_btn(Blue_weapon3, "Blue_weapon3", 200)
+        self.menu.add_btn(Red_solder, "Red_solder", 200)
+        self.menu.add_btn(Red_weapon1, "Red_weapon1", 200)
+        self.menu.add_btn(Red_weapon2, "Red_weapon2", 200)
         self.role_list = []
         self.weapon_list = []
         self.candidate_list = []
@@ -72,12 +64,13 @@ class Game:
         self.map_top = pygame.image.load('./source/img/map/0_top.png').convert_alpha()
         self.game_map = GameMap(self.map_bottom, self.map_top, 0, 0)
         self.game_map.load_walk_file('./source/img/map/1.map')
-        self.role = CharWalk(self.hero, 48, CharWalk.DIR_DOWN, 5, 10)
+
+        # zmy 添加range参数,range = 100
+        self.role = CharWalk(self.hero, 48, CharWalk.DIR_DOWN, 5, 10,100, 'None',self.screen_surf)
 
     def update(self):
         while True:
             self.clock.tick(self.fps)
-
 
             # 逻辑更新
             for mobile in self.role_list:
@@ -99,8 +92,7 @@ class Game:
 
             # self.game_map.draw_top(self.screen_surf)
             #self.game_map.draw_grid(self.screen_surf)
-            self.horizonMenu.draw(self.screen_surf)
-            self.verticalMenu.draw(self.screen_surf)
+            self.menu.draw(self.screen_surf)
             pygame.display.update()
 
     def event_handler(self):
@@ -112,13 +104,16 @@ class Game:
                 mx = (mouse_x - self.game_map.x) // 32
                 my = (mouse_y - self.game_map.y) // 32
                 if self.moving_object:
-
+                    print("check1")
+                    if self.moving_object.camp == 'blue':
+                        color = 255,100,100
+                        pygame.draw.circle(self.moving_object.hero_surf,color,(mx,my),200,width=10)
+                    print("画图结束")
                     self.role_list.append(self.moving_object)
                     # self.role.show(mx,my)
                     self.moving_object = None
                 else:
-                    side_menu_button = self.horizonMenu.get_clicked(mouse_x, mouse_y)
-                    verti_menu_button = self.verticalMenu.get_clicked(mouse_x,mouse_y)
+                    side_menu_button = self.menu.get_clicked(mouse_x, mouse_y)
                     candidate_role = self.choose_role(mouse_x, mouse_y)
 
                     # 判断是否选择相应的角色移动
@@ -140,12 +135,9 @@ class Game:
                         print(side_menu_button)
                         self.add_weapon(side_menu_button)
 
-                    if verti_menu_button:
-                        print(verti_menu_button)
-
                     for set_role in self.candidate_list:
-
-                        set_role.find_path(self.game_map, (set_role.dest_mx, set_role.dest_my))
+                        print(set_role.next_mx, set_role.next_my)
+                        set_role.find_path(self.game_map, (set_role.dest_mx, set_role.dest_my),self.screen_surf)
 
     def add_weapon(self, name):
         x, y = pygame.mouse.get_pos()
@@ -159,7 +151,14 @@ class Game:
 
         try:
             role = pygame.image.load('./source/img/character/hero.png').convert_alpha()
-            obj = CharWalk(role, role_index_list[name_list.index(name)], CharWalk.DIR_DOWN, mx, my)
+
+
+            #zmy 添加range,range = 100
+            if (name =='Blue_solder') | (name=="Blue_weapon3") | (name=="Blue_weapon2") :
+                obj = CharWalk(role, role_index_list[name_list.index(name)], CharWalk.DIR_DOWN, mx, my, 100, 'blue',self.screen_surf)
+            else :
+                obj = CharWalk(role, role_index_list[name_list.index(name)], CharWalk.DIR_DOWN, mx, my, 100, 'red',self.screen_surf)
+
             self.moving_object = obj
             # obj.moving = True
         except Exception as e:
@@ -188,4 +187,4 @@ class Game:
 
 
 if __name__ == '__main__':
-    Game("versus", 710, 550)
+    Game("versus", 640, 550)

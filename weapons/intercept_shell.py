@@ -1,26 +1,34 @@
 import random
 from positionFunc import *
 from shell import *
-class general_shell(shell):#拦截炮弹
-    def __init__(self,position,target,launchTime,disturbFlag,image,):
-        shell.__init__(position,target,launchTime,disturbFlag,image)
-        self.name="bullet" #名称
-        self.hit_area=2000 #攻击目标
+from vision_shell import *
+class intercept_shell(shell):#拦截炮弹
+
+    def __init__(self, screen, x, y, target, launchTime, imageName, direction):
+        shell.__init__(screen, x, y, target, launchTime, imageName, direction)
+        self.shellNum_max = 50#拦截炮弹的数目
+        self.name = "intercept_shell"  # 炮弹种类名称
+        self.interceptR = 2000  # 拦截范围，半径
+        self.interceptProbability=random.random()#随机生成拦截概率
+        self.interceptStatus=False#拦截状态
+        self.interceptList=[]#拦截可选对象
+
+    #定义拦截策略，怎么拦截才能成功
+    def Intercept(self):
+        #是否照明？？？若照明则拦截概率增大
+        #判断拦截可选对象中哪个最容易拦截
+        return True
 
 
-    #计算命中概率  杀伤概率
+    #计算拦截概率
     def calPossibility(self):
-        distance=distanceCal(self.curr_pos[0],self.curr_pos[1],self.target.curr_pos[0],self.target.cur_pos[1])
-        if distance<=self.R:
-            self.hitPropable=0.5
-        elif distance>self.R and distance<=self.R*2:
-            self.hitPropable = 0.4
-        elif distance>self.R*2 and distance <= self.R*3:
-            self.hitPropable=0.05
+        distance=distanceCal(self.x,self.y,self.target.curr_pos[0],self.target.cur_pos[1])
+        if distance<=self.interceptR:
+            self.interceptProbability=0.5
+        elif distance>self.interceptR and distance<=self.interceptR*2:
+            self.interceptProbability = 0.4
+        elif distance>self.interceptR*2 and distance <= self.interceptR*3:
+            self.interceptProbability=0.2
         else:
-            self.hitPropable=0.01
+            self.interceptProbability=0.1
 
-    #移动函数
-    def movePosition(self,position):
-        return True #该语句仅作占位，写完即删
-        #逻辑描述：判断是否有探测功能，若有探测，则误差半径逐步降低，否则不变，逐步计算下一步位置，更新位置，概率，计算总移动距离等。
