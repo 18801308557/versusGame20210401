@@ -19,6 +19,8 @@ class bullet(pygame.sprite.Sprite):
         self.targetY=tarY
         # 获得子弹矩形(x, y, width, height)，操作矩形进行旋转
         self.rect = self.image.get_rect()
+        self.rect.x=self.currentX
+        self.rect.y=self.currentY
         # 移动速度
         self.speed = 5
 
@@ -27,48 +29,97 @@ class bullet(pygame.sprite.Sprite):
         self.rect.x = self.currentX
         self.rect.y= self.currentY
 
-    #旋转子弹图片
-    def rotateBullet(self):
-        #计算旋转角度
-        angle = math.atan2((self.targetY - self.currentY), (self.targetX - self.currentX))  # angle弧度
-        theta = angle * (180 / math.pi)  # 角度
-        #旋转图片(注意：这里要搞一个新变量，存储旋转后的图片）
-        newImage = pygame.transform.rotate(self.image,angle)
-        # 校正旋转图片的中心点
-        newImageRect = newImage.get_rect(center=self.rect.center)
-        # 这里要用newRect区域，绘制图象
-        self.main_scene.blit(newImage, newImageRect)
-        return True
+    def rotateAngle(self):
+        # 计算旋转角度
+        angle = math.atan2(math.fabs((self.targetY - self.currentY)), math.fabs((self.targetX - self.currentX)))  # angle弧度
+        print("angle:", angle)
+        theta = 0
+        if self.currentX < self.targetX and self.currentY < self.targetY:  # 起点在终点的左上
+            theta = 360 - angle * (180 / math.pi)  # 角度
+            print("左上")
+        elif self.currentX == self.targetX and self.currentY > self.targetY:  # 起点在终点的上方
+            theta = angle * (180 / math.pi)  # 角度
+            print("正下方")
+        elif self.currentX == self.targetX and self.currentY < self.targetY:  # 起点在终点的上方
+            theta = 180 + angle * (180 / math.pi)  # 角度
+            print("正上方")
+        elif self.currentX < self.targetX and self.currentY == self.targetY:  # 在上方
+            theta = angle * (180 / math.pi)  # 角度
+            print("正左方")
+        elif self.currentX > self.targetX and self.currentY == self.targetY:  # 在上方
+            theta = 180 + angle * (180 / math.pi)  # 角度
+            print("正右方")
+        elif self.currentX > self.targetX and self.currentY < self.targetY:  # 起点在终点的右上
+            theta = 180 + angle * (180 / math.pi)  # 角度
+            print("右上")
+        elif self.currentX > self.targetX and self.currentY > self.targetY:  # 起点在终点的右下
+            theta = 180 - angle * (180 / math.pi)  # 角度
+            print("右下")
+        else:  # 起点在终点的左下
+            theta = angle * (180 / math.pi)  # 角度
+            print("左下")
+        print("角度", theta)
+        return theta
 
-    # 子弹移动函数
+    # #旋转子弹图片
+    # def rotateBullet(self):
+    #     #计算旋转角度
+    #     theta=self.rotateAngle()# 角度
+    #     #旋转图片(注意：这里要搞一个新变量，存储旋转后的图片）
+    #     old_center=self.rect.center
+    #     newImage = pygame.transform.rotate(self.image,theta)
+    #     # 校正旋转图片的中心点
+    #     newImageRect = newImage.get_rect()
+    #     self.newImageRect.center = old_center
+    #     # 这里要用newRect区域，绘制图象
+    #     self.main_scene.blit(newImage, newImageRect)
+    #     pygame.display.update()
+
+    # 旋转子弹函数
     def moveBullet(self):
+        lastTime = time.time()
+        print("lastTime=", lastTime)
+        angle, flag = self.rotateAngle()  # 得到旋转角度
+        print("角度angle=", angle, ";flag=", flag)
+        # 旋转图片(注意：这里要搞一个新变量，存储旋转后的图片）
+        oldCenter = self.rect.center
+        newLeaf = pygame.transform.rotate(self.image, angle)
+        # 校正旋转图片的中心点
+        newImageRect = newLeaf.get_rect()
+        newImageRect.center = oldCenter
+        self.screen.blit(newLeaf, newImageRect)
 
-        self.rotateBullet()
-        # 向目标位置靠近
-        if self.currentX < self.targetX:
-            self.currentX+=self.speed
-            if self.currentX >= self.targetX:
-                self.currentX = self.targetX
-
-        elif self.currentX > self.targetX:
-            self.currentX -= self.speed
-            if self.currentX <= self.targetX:
-                self.currentX = self.targetX
-
-        if self.currentY < self.targetY:
-            self.currentY += self.speed
-            if self.currentY >= self.targetY:
-                self.currentY = self.targetY
-        elif self.currentY > self.targetY:
-            self.currentY -= self.speed
-            if self.currentY <= self.targetY:
-                self.currentY = self.targetY
-        self.setRectPos()
+        # 移动
+        while not math.fabs(newImageRect.x - self.targetX) <= 3 and math.fabs(newImageRect.y - self.targetY) <= 3:
+            # nowTime = time.time()
+            # if nowTime - lastTime > 0.05:
+            if flag == 1:  # up
+                newImageRect.y += self.speed  # 移动炮弹
+                newImageRect.x += self.speed
+            elif flag == 2:  # 正下方
+                newImageRect.y -= self.speed
+            elif flag == 3:  # 正上方
+                newImageRect.y += self.speed
+            elif flag == 4:  # right
+                newImageRect.x += self.speed
+            elif flag == 5:  # right
+                newImageRect.x -= self.speed
+            elif flag == 6:  # 正上方
+                newImageRect.y += self.speed
+                newImageRect.x -= self.speed
+            elif flag == 7:  # right
+                newImageRect.x -= self.speed
+                newImageRect.y -= self.speed
+            elif flag == 8:  # right
+                newImageRect.x += self.speed
+                newImageRect.y -= self.speed
+            # lastTime = nowTime
+            self.screen.blit(newLeaf, newImageRect)
+            pygame.display.update()
 
     #显示子弹
     def displayBullet(self):
         self.main_scene.blit(self.image, (self.currentX, self.currentY))
-
 
 
     #     #记录时间，更新子弹射击的频率
