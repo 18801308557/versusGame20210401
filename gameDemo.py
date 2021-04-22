@@ -1,8 +1,8 @@
 import sys
 import os
 import pygame
-from Map import GameMap
-from core import CharWalk, Sprite
+
+from mobile_carrier.solder_new import GameMap, CharWalk, Sprite
 from menu.menu import horizontalMenu
 
 side_img = pygame.transform.scale(pygame.image.load("./source/img/menu/bg1.png"), (640, 70))
@@ -30,6 +30,7 @@ class Game:
 
         self.__init_pygame()
         self.__init_game()
+
         self.menu = horizontalMenu(self.width - side_img.get_width(), self.height - side_img.get_height(), side_img)
         self.menu.add_btn(Blue_solder, "Blue_solder", 200)
         self.menu.add_btn(Blue_weapon2, "Blue_weapon2", 200)
@@ -63,7 +64,9 @@ class Game:
         self.map_top = pygame.image.load('./source/img/map/0_top.png').convert_alpha()
         self.game_map = GameMap(self.map_bottom, self.map_top, 0, 0)
         self.game_map.load_walk_file('./source/img/map/1.map')
-        self.role = CharWalk(self.hero, 48, CharWalk.DIR_DOWN, 5, 10)
+
+        # zmy 添加range参数,range = 100
+        self.role = CharWalk(self.hero, 48, CharWalk.DIR_DOWN, 5, 10,100, 'None')
 
     def update(self):
         while True:
@@ -101,7 +104,11 @@ class Game:
                 mx = (mouse_x - self.game_map.x) // 32
                 my = (mouse_y - self.game_map.y) // 32
                 if self.moving_object:
-
+                    print("check1")
+                    if self.moving_object.camp == 'blue':
+                        color = 255,100,100
+                        pygame.draw.circle(self.moving_object.hero_surf,color,(mx,my),200,width=10)
+                    print("画图结束")
                     self.role_list.append(self.moving_object)
                     # self.role.show(mx,my)
                     self.moving_object = None
@@ -129,7 +136,7 @@ class Game:
                         self.add_weapon(side_menu_button)
 
                     for set_role in self.candidate_list:
-
+                        print(set_role.next_mx, set_role.next_my)
                         set_role.find_path(self.game_map, (set_role.dest_mx, set_role.dest_my))
 
     def add_weapon(self, name):
@@ -144,7 +151,14 @@ class Game:
 
         try:
             role = pygame.image.load('./source/img/character/hero.png').convert_alpha()
-            obj = CharWalk(role, role_index_list[name_list.index(name)], CharWalk.DIR_DOWN, mx, my)
+
+
+            #zmy 添加range,range = 100
+            if (name =='Blue_solder') | (name=="Blue_weapon3") | (name=="Blue_weapon2") :
+                obj = CharWalk(role, role_index_list[name_list.index(name)], CharWalk.DIR_DOWN, mx, my, 100, 'blue')
+            else :
+                obj = CharWalk(role, role_index_list[name_list.index(name)], CharWalk.DIR_DOWN, mx, my, 100, 'red')
+
             self.moving_object = obj
             # obj.moving = True
         except Exception as e:
