@@ -65,8 +65,8 @@ class Game:
         self.game_map = GameMap(self.map_bottom, self.map_top, 0, 0)
         self.game_map.load_walk_file('./source/img/map/1.map')
 
-        # zmy 添加range参数,range = 100
-        self.role = CharWalk(self.hero, 48, CharWalk.DIR_DOWN, 5, 10,100, 'None',self.screen_surf)
+        # zmy 添加range参数,range = 70
+        self.role = CharWalk(self.hero, 48, CharWalk.DIR_DOWN, 5, 10,70, 'None',self.screen_surf)
 
     def update(self):
         while True:
@@ -106,8 +106,7 @@ class Game:
                 if self.moving_object:
                     print("check1")
                     if self.moving_object.camp == 'blue':
-                        color = 255,100,100
-                        pygame.draw.circle(self.moving_object.hero_surf,color,(mx,my),200,width=10)
+                        pygame.draw.circle(self.screen_surf,(255,0,0),(mx,my),200,width=10)
                     print("画图结束")
                     self.role_list.append(self.moving_object)
                     # self.role.show(mx,my)
@@ -155,9 +154,9 @@ class Game:
 
             #zmy 添加range,range = 100
             if (name =='Blue_solder') | (name=="Blue_weapon3") | (name=="Blue_weapon2") :
-                obj = CharWalk(role, role_index_list[name_list.index(name)], CharWalk.DIR_DOWN, mx, my, 100, 'blue',self.screen_surf)
+                obj = CharWalk(role, role_index_list[name_list.index(name)], CharWalk.DIR_DOWN, mx, my, 70, 'blue',self.screen_surf)
             else :
-                obj = CharWalk(role, role_index_list[name_list.index(name)], CharWalk.DIR_DOWN, mx, my, 100, 'red',self.screen_surf)
+                obj = CharWalk(role, role_index_list[name_list.index(name)], CharWalk.DIR_DOWN, mx, my, 70, 'red',self.screen_surf)
 
             self.moving_object = obj
             # obj.moving = True

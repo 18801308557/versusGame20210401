@@ -123,7 +123,7 @@ class CharWalk:
         self.range = range
         self.camp = camp #所属阵营
         self.screen = screen
-        self.totalBulletNum = 100  # 总弹药量
+        self.totalBulletNum = 50  # 总弹药量
 
         self.is_walking = False  # 角色是否正在移动
         self.frame = 1  # 角色当前帧
@@ -239,13 +239,11 @@ class CharWalk:
             t_x =self.path[-1].x
             t_y = self.path[-1].y
             if dis <= int(self.range/32):
-                #print("len(path)",len(self.path))
                 while len(self.path) > self.path_index+1:
                     self.path.pop()
-                #print("删除之后的path", len(self.path))
                 b = bullet(self.screen,self.path[self.path_index].x,self.path[self.path_index].y, t_x, t_y)
+                b.moveBullet()
             self.path_index += 1
-
 
 
 
