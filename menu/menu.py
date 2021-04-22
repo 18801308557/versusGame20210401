@@ -152,7 +152,8 @@ class horizontalMenu(Menu):
     """
     horizontal Menu for side bar of game
     """
-    def __init__(self, x, y, img):
+    def __init__(self, x, y, img,type):
+        self.type = type
         self.x = x
         self.y = y
         self.width = img.get_width()
@@ -169,10 +170,17 @@ class horizontalMenu(Menu):
         :param name: str
         :return: None
         """
-        self.items += 1
-        btn_x = self.x + (self.items-1)*(img.get_width()+10)
-        btn_y = self.y-10
-        self.buttons.append(horizontalButton(btn_x, btn_y, img, name, cost))
+        if self.type=='horizon':
+            self.items += 1
+            btn_x = self.x + (self.items-1)*(img.get_width()+10)
+            btn_y = self.y-10
+            self.buttons.append(horizontalButton(btn_x, btn_y, img, name, cost))
+        elif self.type=='vertical':
+            self.items += 1
+            btn_x = self.x
+            btn_y = self.y+(self.items-1)*(img.get_height()+10)
+            self.buttons.append(horizontalButton(btn_x, btn_y, img, name, cost))
+
 
     def get_item_cost(self, name):
         """
@@ -195,8 +203,12 @@ class horizontalMenu(Menu):
         for item in self.buttons:
             item.draw(win)
             #win.blit(star2, (item.x+2, item.y + item.height))
-            text = self.font.render(str(item.cost), 1, (255,255,255))
-            win.blit(text, (item.x + item.width/2 - text.get_width()/2, item.y + item.height))
+            if self.type=='horizon':
+                text = self.font.render(str(item.cost), 1, (255,255,255))
+                win.blit(text, (item.x + item.width/2 - text.get_width()/2, item.y + item.height))
+
+
+
 
 
 

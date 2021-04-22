@@ -6,12 +6,16 @@ from mobile_carrier.solder_new import GameMap, CharWalk, Sprite
 from menu.menu import horizontalMenu
 
 side_img = pygame.transform.scale(pygame.image.load("./source/img/menu/bg1.png"), (640, 70))
+vertical_img = pygame.transform.scale(pygame.image.load("./source/img/menu/vbg.png"), (70,640))
 Blue_solder = pygame.transform.scale(pygame.image.load("./source/img/menu/Blue_solder.png"), (64, 64))
 Blue_weapon2 = pygame.transform.scale(pygame.image.load("./source/img/menu/Blue_weapon2.png"), (64, 64))
 Blue_weapon3 = pygame.transform.scale(pygame.image.load("./source/img/menu/Blue_weapon3.png"), (64, 64))
 Red_solder = pygame.transform.scale(pygame.image.load("./source/img/menu/Red_solder.png"), (64, 64))
 Red_weapon2 = pygame.transform.scale(pygame.image.load("./source/img/menu/Red_weapon2.png"), (64, 64))
 Red_weapon1 = pygame.transform.scale(pygame.image.load("./source/img/menu/weapon1.png"), (64, 64))
+Start_button = pygame.transform.scale(pygame.image.load("./source/img/menu/start.png"), (64, 64))
+pause_button = pygame.transform.scale(pygame.image.load("./source/img/menu/pause.png"), (64, 64))
+other_button = pygame.transform.scale(pygame.image.load("./source/img/menu/othersetting.png"), (64, 64))
 
 
 class Game:
@@ -31,13 +35,19 @@ class Game:
         self.__init_pygame()
         self.__init_game()
 
-        self.menu = horizontalMenu(self.width - side_img.get_width(), self.height - side_img.get_height(), side_img)
-        self.menu.add_btn(Blue_solder, "Blue_solder", 200)
-        self.menu.add_btn(Blue_weapon2, "Blue_weapon2", 200)
-        self.menu.add_btn(Blue_weapon3, "Blue_weapon3", 200)
-        self.menu.add_btn(Red_solder, "Red_solder", 200)
-        self.menu.add_btn(Red_weapon1, "Red_weapon1", 200)
-        self.menu.add_btn(Red_weapon2, "Red_weapon2", 200)
+        self.horizonMenu = horizontalMenu(0, self.height - side_img.get_height(), side_img,'horizon')
+        self.horizonMenu.add_btn(Blue_solder, "Blue_solder", 200)
+        self.horizonMenu.add_btn(Blue_weapon2, "Blue_weapon2", 200)
+        self.horizonMenu.add_btn(Blue_weapon3, "Blue_weapon3", 200)
+        self.horizonMenu.add_btn(Red_solder, "Red_solder", 200)
+        self.horizonMenu.add_btn(Red_weapon1, "Red_weapon1", 200)
+        self.horizonMenu.add_btn(Red_weapon2, "Red_weapon2", 200)
+
+        self.verticalMenu = horizontalMenu(self.width-vertical_img.get_width(),0,vertical_img,'vertical')
+
+        self.verticalMenu.add_btn(Start_button,"start",0)
+        self.verticalMenu.add_btn(pause_button,"pause",0)
+        self.verticalMenu.add_btn(other_button,"other",0)
         self.role_list = []
         self.weapon_list = []
         self.candidate_list = []
@@ -92,7 +102,8 @@ class Game:
 
             # self.game_map.draw_top(self.screen_surf)
             #self.game_map.draw_grid(self.screen_surf)
-            self.menu.draw(self.screen_surf)
+            self.horizonMenu.draw(self.screen_surf)
+            self.verticalMenu.draw(self.screen_surf)
             pygame.display.update()
 
     def event_handler(self):
@@ -113,7 +124,8 @@ class Game:
                     # self.role.show(mx,my)
                     self.moving_object = None
                 else:
-                    side_menu_button = self.menu.get_clicked(mouse_x, mouse_y)
+                    side_menu_button = self.horizonMenu.get_clicked(mouse_x, mouse_y)
+                    verti_menu_button = self.verticalMenu.get_clicked(mouse_x,mouse_y)
                     candidate_role = self.choose_role(mouse_x, mouse_y)
 
                     # 判断是否选择相应的角色移动
@@ -134,6 +146,9 @@ class Game:
                     if side_menu_button:
                         print(side_menu_button)
                         self.add_weapon(side_menu_button)
+
+                    if verti_menu_button:
+                        print(verti_menu_button)
 
                     for set_role in self.candidate_list:
                         print(set_role.next_mx, set_role.next_my)
@@ -187,4 +202,4 @@ class Game:
 
 
 if __name__ == '__main__':
-    Game("versus", 640, 550)
+    Game("versus", 710, 550)
