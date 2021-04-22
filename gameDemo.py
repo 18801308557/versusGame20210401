@@ -66,7 +66,7 @@ class Game:
         self.game_map.load_walk_file('./source/img/map/1.map')
 
         # zmy 添加range参数,range = 100
-        self.role = CharWalk(self.hero, 48, CharWalk.DIR_DOWN, 5, 10,100, 'None')
+        self.role = CharWalk(self.hero, 48, CharWalk.DIR_DOWN, 5, 10,100, 'None',self.screen_surf)
 
     def update(self):
         while True:
@@ -137,7 +137,7 @@ class Game:
 
                     for set_role in self.candidate_list:
                         print(set_role.next_mx, set_role.next_my)
-                        set_role.find_path(self.game_map, (set_role.dest_mx, set_role.dest_my))
+                        set_role.find_path(self.game_map, (set_role.dest_mx, set_role.dest_my),self.screen_surf)
 
     def add_weapon(self, name):
         x, y = pygame.mouse.get_pos()
@@ -155,9 +155,9 @@ class Game:
 
             #zmy 添加range,range = 100
             if (name =='Blue_solder') | (name=="Blue_weapon3") | (name=="Blue_weapon2") :
-                obj = CharWalk(role, role_index_list[name_list.index(name)], CharWalk.DIR_DOWN, mx, my, 100, 'blue')
+                obj = CharWalk(role, role_index_list[name_list.index(name)], CharWalk.DIR_DOWN, mx, my, 100, 'blue',self.screen_surf)
             else :
-                obj = CharWalk(role, role_index_list[name_list.index(name)], CharWalk.DIR_DOWN, mx, my, 100, 'red')
+                obj = CharWalk(role, role_index_list[name_list.index(name)], CharWalk.DIR_DOWN, mx, my, 100, 'red',self.screen_surf)
 
             self.moving_object = obj
             # obj.moving = True
