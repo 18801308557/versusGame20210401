@@ -35,7 +35,9 @@ class Game:
         self.__init_pygame()
         self.__init_game()
 
+        #wzq水平菜单的初始化
         self.horizonMenu = horizontalMenu(0, self.height - side_img.get_height(), side_img,'horizon')
+        #水平菜单添加按键
         self.horizonMenu.add_btn(Blue_solder, "Blue_solder", 200)
         self.horizonMenu.add_btn(Blue_weapon2, "Blue_weapon2", 200)
         self.horizonMenu.add_btn(Blue_weapon3, "Blue_weapon3", 200)
@@ -43,16 +45,22 @@ class Game:
         self.horizonMenu.add_btn(Red_weapon1, "Red_weapon1", 200)
         self.horizonMenu.add_btn(Red_weapon2, "Red_weapon2", 200)
 
+        #增加游戏的垂直主菜单，开始暂停
         self.verticalMenu = horizontalMenu(self.width-vertical_img.get_width(),0,vertical_img,'vertical')
-
+        #垂直菜单增加按键
         self.verticalMenu.add_btn(Start_button,"start",0)
         self.verticalMenu.add_btn(pause_button,"pause",0)
         self.verticalMenu.add_btn(other_button,"other",0)
+        #初始化角色列表
         self.role_list = []
+        #初始化武器列表
         self.weapon_list = []
+        #初始化当前正在寻路的物体列表
         self.candidate_list = []
+        #我们的攻击操作是先点击攻击者，再点击攻击目标，此处为是否有未设置目标的攻击者
         self.moving_candidate = None
-        self.moving_object = None
+
+        self.moving_object = None #此处存放ui拖拽的物体
 
         self.update()
 
@@ -82,6 +90,7 @@ class Game:
         while True:
             self.clock.tick(self.fps)
 
+
             # 逻辑更新
             for mobile in self.role_list:
                 mobile.logic()
@@ -89,66 +98,100 @@ class Game:
             # 画面更新
             self.game_map.draw_bottom(self.screen_surf)
 
+            #是否有正在拖拽的物体
             if self.moving_object:
-                m_x, m_y = pygame.mouse.get_pos()
-                mx = (m_x - self.game_map.x) // 32
+
+                m_x, m_y = pygame.mouse.get_pos()#获取鼠标点击位置
+                mx = (m_x - self.game_map.x) // 32 #获取位置对应的二维数组下标
                 my = (m_y - self.game_map.y) // 32
-                self.moving_object.show(mx, my)
+                self.moving_object.show(mx, my)#重新设置物体的格子位置
                 self.moving_object.draw(self.screen_surf, self.game_map.x, self.game_map.y)
             # else:
+            #如果没有正在拖拽的物体，就不断刷新当前场上的物体
             for mobile in self.role_list:
                 mobile.draw(self.screen_surf, self.game_map.x, self.game_map.y)
                 # mobile.has_showed = True
 
             # self.game_map.draw_top(self.screen_surf)
             #self.game_map.draw_grid(self.screen_surf)
-            self.horizonMenu.draw(self.screen_surf)
-            self.verticalMenu.draw(self.screen_surf)
+
+            self.horizonMenu.draw(self.screen_surf)#绘制UI
+            self.verticalMenu.draw(self.screen_surf)#绘制UI
             pygame.display.update()
 
+    #处理触发的事件
     def event_handler(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
+
+            #如果鼠标点击了
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_x, mouse_y = pygame.mouse.get_pos()
+
+                #获取当前鼠标所在格子
                 mx = (mouse_x - self.game_map.x) // 32
                 my = (mouse_y - self.game_map.y) // 32
+
+                #如果当前拖拽的物体放置下来了
                 if self.moving_object:
                     print("check1")
                     if self.moving_object.camp == 'blue':
                         pygame.draw.circle(self.screen_surf,(255,0,0),(mx,my),200,width=10)
                     print("画图结束")
+
+                    #已放置好，将其添加到角色列表
                     self.role_list.append(self.moving_object)
                     # self.role.show(mx,my)
+                    #将拖拽ui物体重新置为空
                     self.moving_object = None
+
+
+                #如果当前没有在拖拽物体，这是一个基本状态
                 else:
+                    #判断当前是否在点击水平按钮
                     side_menu_button = self.horizonMenu.get_clicked(mouse_x, mouse_y)
+                    #判断当前是否在点击垂直按钮
                     verti_menu_button = self.verticalMenu.get_clicked(mouse_x,mouse_y)
+
+                    #判断当前是否在点击一个物体
                     candidate_role = self.choose_role(mouse_x, mouse_y)
 
-                    # 判断是否选择相应的角色移动
+                    # 如果点击了一个空地
                     if candidate_role is None:
+                        #如果当前存在一个未设置目标的攻击者，就把当前点击的空地位置传给他
+                        #此处也就完成了我们的攻击方式第二步，设置攻击的目标位置
+                        #因此需要将moving_candidate置为空，方便对下一个点击的物体操作
                         if self.moving_candidate and self.moving_candidate.set_dest is False:
                             self.moving_candidate.dest_mx = mx
                             self.moving_candidate.dest_my = my
                             self.moving_candidate.set_dest = True
                             self.moving_candidate = None
+
+                    #如果当前点击了一个物体，就该给他分配攻击对象了
                     else:
+                        #我们将所有正在去攻击对象的路上的物体存放在candidate_list中
+                        #因为我们可能再一次点击他，表示要重新给他分配攻击对象
+                        #因此标志位set_dest置为false
                         if candidate_role in self.candidate_list:
                             candidate_role.set_dest = False
+                        #如果当前选择的是没有攻击过别人的物体，就加入列表
                         else:
                             self.candidate_list.append(candidate_role)
+                        #将点击的物体作为待分配攻击对象的候选者moving_candidate
                         self.moving_candidate = candidate_role
 
                     # 菜单的点击
                     if side_menu_button:
                         print(side_menu_button)
+                        #点击的是水平菜单中的按钮就触发相应事件
                         self.add_weapon(side_menu_button)
 
+                    #如果是垂直菜单按钮
                     if verti_menu_button:
                         print(verti_menu_button)
 
+                    #对当前有了攻击对象的物体，进行寻路分配
                     for set_role in self.candidate_list:
                         print(set_role.next_mx, set_role.next_my)
                         set_role.find_path(self.game_map, (set_role.dest_mx, set_role.dest_my),self.screen_surf)
