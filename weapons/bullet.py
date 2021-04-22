@@ -28,6 +28,21 @@ class bullet(pygame.sprite.Sprite):
     def setRectPos(self):
         self.rect.x = self.currentX
         self.rect.y= self.currentY
+        #确定方向
+    def getDirection(self):
+        if self.currentX < self.targetX and self.currentY == self.targetY:  # 起点在终点的左上
+            flag=1#向右
+            print("向右移动")
+        if self.currentX > self.targetX and self.currentY == self.targetY:  # 起点在终点的左上
+            flag=2#向左
+            print("向左移动")
+        if self.currentX == self.targetX and self.currentY > self.targetY:  # 起点在终点的左上
+            flag=3#向下
+            print("向下移动")
+        if self.currentX < self.targetX and self.currentY < self.targetY:  # 起点在终点的左上
+            flag=4#向上
+            print("向上移动")
+        return flag
 
     def rotateAngle(self):
         # 计算旋转角度
@@ -88,72 +103,75 @@ class bullet(pygame.sprite.Sprite):
     def moveBullet(self):
         #显示子弹
         #self.displayBullet()
-        lastTime = time.time()
-        print("lastTime=", lastTime)
-        angle, flag = self.rotateAngle()  # 得到旋转角度
-        print("角度angle=", angle, ";flag=", flag)
-        # 旋转图片(注意：这里要搞一个新变量，存储旋转后的图片）
-        oldCenter = self.rect.center
-        newLeaf = pygame.transform.rotate(self.image, angle)
-        # 校正旋转图片的中心点
-        newImageRect = newLeaf.get_rect()
-        newImageRect.center = oldCenter
-        self.screen.blit(newLeaf, newImageRect)
+        # lastTime = time.time()
+        # print("lastTime=", lastTime)
+        # angle, flag = self.rotateAngle()  # 得到旋转角度
+        # print("角度angle=", angle, ";flag=", flag)
+        # # 旋转图片(注意：这里要搞一个新变量，存储旋转后的图片）
+        # oldCenter = self.rect.center
+        # newLeaf = pygame.transform.rotate(self.image, angle)
+        # # 校正旋转图片的中心点
+        # newImageRect = newLeaf.get_rect()
+        # newImageRect.center = oldCenter
+        flag=self.getDirection()
+        print("flag=",flag)
+        self.screen.blit(self.image, self.rect)
         pygame.display.update()
-        # 移动
+        # 移动 1:右 2 左 3 下  4上
         while True:
             # nowTime = time.time()
             # if nowTime - lastTime > 0.05:
-            if flag == 1:  # up
-                newImageRect.y += self.speed  # 移动炮弹
-                newImageRect.x += self.speed
-                if newImageRect.y > self.targetY:
-                    newImageRect.y = self.targetY
-                if newImageRect.x > self.targetX:
-                    newImageRect.x = self.targetX
-            elif flag == 2:  # 正下方
-                newImageRect.y -= self.speed
-                if newImageRect.y < self.targetY:
-                    newImageRect.y = self.targetY
-            elif flag == 3:  # 正上方
-                newImageRect.y += self.speed
-                if newImageRect.y>self.targetY:
-                    newImageRect.y=self.targetY
-            elif flag == 4:  # right
-                newImageRect.x += self.speed
-                if newImageRect.x>self.targetX:
-                    newImageRect.x=self.targetX
-            elif flag == 5:  # right
-                newImageRect.x -= self.speed
-                if newImageRect.x<self.targetX:
-                    newImageRect.x=self.targetX
-            elif flag == 6:  # 正上方
-                newImageRect.y += self.speed
-                newImageRect.x -= self.speed
-                if newImageRect.y>self.targetY:
-                    newImageRect.y=self.targetY
-                if newImageRect.x<self.targetX:
-                    newImageRect.x=self.targetX
-            elif flag == 7:  # right
-                newImageRect.x -= self.speed
-                newImageRect.y -= self.speed
-                if newImageRect.y<self.targetY:
-                    newImageRect.y=self.targetY
-                if newImageRect.x<self.targetX:
-                    newImageRect.x=self.targetX
-            elif flag == 8:  # right
-                newImageRect.x += self.speed
-                newImageRect.y -= self.speed
-                if newImageRect.y<self.targetY:
-                    newImageRect.y=self.targetY
-                if newImageRect.x>self.targetX:
-                    newImageRect.x=self.targetX
+            if flag == 1:  # 右
+                #self.rect.y += self.speed  # 移动炮弹
+                self.rect.x += self.speed
+                # if self.rect.y > self.targetY:
+                #     self.rect.y = self.targetY
+                if self.rect.x > self.targetX:
+                    self.rect.x = self.targetX
+            elif flag == 2:  # 左
+                self.rect.x -= self.speed
+                if self.rect.x < self.targetX:
+                    self.rect.x= self.targetX
+            elif flag == 3:  # 下
+                self.rect.y -= self.speed
+                if self.rect.y<self.targetY:
+                    self.rect.y=self.targetY
+            elif flag == 4:  # 上
+                self.rect.y += self.speed
+                if self.rect.y>self.targetY:
+                    self.rect.y=self.targetY
+            # elif flag == 5:  # right
+            #     newImageRect.x -= self.speed
+            #     if newImageRect.x<self.targetX:
+            #         newImageRect.x=self.targetX
+            # elif flag == 6:  # 正上方
+            #     newImageRect.y += self.speed
+            #     newImageRect.x -= self.speed
+            #     if newImageRect.y>self.targetY:
+            #         newImageRect.y=self.targetY
+            #     if newImageRect.x<self.targetX:
+            #         newImageRect.x=self.targetX
+            # elif flag == 7:  # right
+            #     newImageRect.x -= self.speed
+            #     newImageRect.y -= self.speed
+            #     if newImageRect.y<self.targetY:
+            #         newImageRect.y=self.targetY
+            #     if newImageRect.x<self.targetX:
+            #         newImageRect.x=self.targetX
+            # elif flag == 8:  # right
+            #     newImageRect.x += self.speed
+            #     newImageRect.y -= self.speed
+            #     if newImageRect.y<self.targetY:
+            #         newImageRect.y=self.targetY
+            #     if newImageRect.x>self.targetX:
+            #         newImageRect.x=self.targetX
             # lastTime = nowTime
-            self.screen.blit(newLeaf, newImageRect)
+            self.screen.blit(self.image, self.rect)
             pygame.display.update()
-            print("x:", newImageRect.x - self.targetX, "y:", newImageRect.y - self.targetY)
-            if math.fabs(newImageRect.x - self.targetX) <= 2 and math.fabs(newImageRect.y - self.targetY) <= 2:
-                print("x:", newImageRect.x - self.targetX, "y:", newImageRect.y - self.targetY)
+            print("x:", self.rect.x - self.targetX, "y:", self.rect.y - self.targetY)
+            if math.fabs(self.rect.x - self.targetX) < 3 and math.fabs(self.rect.y - self.targetY) <3:
+                print("x:", self.rect.x - self.targetX, "y:", self.rect.y - self.targetY)
+                print("攻击结束！！")
                 break  # 击中推出移动循环
 
     #显示子弹
