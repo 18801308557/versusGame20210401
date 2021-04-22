@@ -1,8 +1,8 @@
 import pygame
 
 from astar import AStar
-
-
+from weapons.bullet import bullet
+import positionFunc
 class Sprite:
     """
     用于绘制精灵图的工具类
@@ -105,7 +105,7 @@ class CharWalk:
     DIR_RIGHT = 2
     DIR_UP = 3
 
-    def __init__(self, hero_surf, char_id, dir, mx, my, range,camp):
+    def __init__(self, hero_surf, char_id, dir, mx, my, range,camp,screen):
         """
         :param hero_surf: 精灵图的surface
         :param char_id: 角色id
@@ -122,6 +122,7 @@ class CharWalk:
         self.my = my
         self.range = range
         self.camp = camp #所属阵营
+        self.screen = screen
         self.totalBulletNum = 100  # 总弹药量
 
         self.is_walking = False  # 角色是否正在移动
@@ -187,7 +188,6 @@ class CharWalk:
             return
         dest_x = self.next_mx * 32
         dest_y = self.next_my * 32
-
         # 向目标位置靠近
         if self.x < dest_x:
             self.x += self.step
@@ -217,51 +217,53 @@ class CharWalk:
         if self.x == dest_x and self.y == dest_y:
             self.is_walking = False
 
+
     def logic(self):
         self.move()
-
         # 如果角色正在移动，就不管它了
         if self.is_walking:
             return
 
         # 如果寻路走到终点了
         if self.path_index == len(self.path):
+
             self.path = []
             self.frame = 1
             self.path_index = 0
+
         else:  # 如果没走到终点，就往下一个格子走
             self.goto(self.path[self.path_index].x, self.path[self.path_index].y)
+
+            #zmy 判断当前格子是否在攻击范围内
+            dis = positionFunc.distanceCal(self.path[self.path_index].x,self.path[self.path_index].y,self.path[-1].x,self.path[-1].y)
+            t_x =self.path[-1].x
+            t_y = self.path[-1].y
+            if dis <= int(self.range/32):
+                #print("len(path)",len(self.path))
+                while len(self.path) > self.path_index+1:
+                    self.path.pop()
+                #print("删除之后的path", len(self.path))
+                b = bullet(self.screen,self.path[self.path_index].x,self.path[self.path_index].y, t_x, t_y)
             self.path_index += 1
 
-    def find_path(self, map2d, end_point):
+
+
+
+    def find_path(self, map2d, end_point,screen):
         """
         :param map2d: 地图
         :param end_point: 寻路终点
         """
-        mrange = int(self.range/32) #半径由像素点转换为格子
 
 
         print("end_point",end_point)
-        print("攻击范围",mrange)
-        if end_point[1]+mrange<map2d.h:
-            target = (end_point[0],end_point[1]+mrange)
-        elif end_point[1] - mrange > 0 :
-            target = (end_point[0], end_point[1] - mrange)
-        elif end_point[0]-mrange > 0 :
-            terget = (end_point[0]-mrange,end_point[1])
-        elif end_point[0]+ mrange < map2d.w :
-            target = (end_point[0]+mrange,end_point[1])
-
         start_point = (self.mx, self.my)
 
         print("start_point",start_point)
-        path = AStar(map2d, start_point, target).start()
-
+        path = AStar(map2d, start_point, end_point).start()
 
         if path is None:
-
             return
 
         self.path = path
-
         self.path_index = 0
