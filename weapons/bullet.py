@@ -28,7 +28,8 @@ class bullet(pygame.sprite.Sprite):
     def setRectPos(self):
         self.rect.x = self.currentX
         self.rect.y= self.currentY
-        #确定方向
+
+    #确定攻击方向
     def getDirection(self):
         if self.currentX < self.targetX and self.currentY == self.targetY:  # 起点在终点的左上
             flag=1#向右
@@ -39,7 +40,7 @@ class bullet(pygame.sprite.Sprite):
         if self.currentX == self.targetX and self.currentY > self.targetY:  # 起点在终点的左上
             flag=3#向下
             print("向下移动")
-        if self.currentX < self.targetX and self.currentY < self.targetY:  # 起点在终点的左上
+        if self.currentX == self.targetX and self.currentY < self.targetY:  # 起点在终点的左上
             flag=4#向上
             print("向上移动")
         return flag
@@ -113,10 +114,11 @@ class bullet(pygame.sprite.Sprite):
         # # 校正旋转图片的中心点
         # newImageRect = newLeaf.get_rect()
         # newImageRect.center = oldCenter
-        flag=self.getDirection()
-        print("flag=",flag)
+
         self.screen.blit(self.image, self.rect)
         pygame.display.update()
+        flag = self.getDirection()
+        print("方向flag=", flag)
         # 移动 1:右 2 左 3 下  4上
         while True:
             # nowTime = time.time()
@@ -168,9 +170,9 @@ class bullet(pygame.sprite.Sprite):
             # lastTime = nowTime
             self.screen.blit(self.image, self.rect)
             pygame.display.update()
-            print("x:", self.rect.x - self.targetX, "y:", self.rect.y - self.targetY)
+            print("距离目标x:", math.fabs(self.rect.x - self.targetX), "距离目标y:", math.fabs(self.rect.y - self.targetY))
             if math.fabs(self.rect.x - self.targetX) < 3 and math.fabs(self.rect.y - self.targetY) <3:
-                print("x:", self.rect.x - self.targetX, "y:", self.rect.y - self.targetY)
+                print("x:", math.fabs(self.rect.x - self.targetX), "y:", math.fabs(self.rect.y - self.targetY))
                 print("攻击结束！！")
                 break  # 击中推出移动循环
 
