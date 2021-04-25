@@ -194,6 +194,7 @@ class Game:
 
                     #对当前有了攻击对象的物体，进行寻路分配
                     for set_role in self.candidate_list:
+
                         print(set_role.next_mx, set_role.next_my)
                         set_role.find_path(self.game_map, (set_role.dest_mx, set_role.dest_my),self.screen_surf)
 
