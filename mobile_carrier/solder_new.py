@@ -115,6 +115,7 @@ class CharWalk:
         :param range: 角色攻击范围
         :param camp: 角色所属阵营
         """
+
         self.hero_surf = hero_surf
         self.char_id = char_id
         self.dir = dir
@@ -124,6 +125,8 @@ class CharWalk:
         self.camp = camp #所属阵营
         self.screen = screen
         self.totalBulletNum = 50  # 总弹药量
+        self.health = 100 #现有血量
+        self.max_health = 100 # 初始血量
         self.isSelect = True
 
         self.is_walking = False  # 角色是否正在移动
@@ -154,11 +157,26 @@ class CharWalk:
 
             win.blit(surface, (self.x+16 - radius, self.y+16 - radius))
 
+    def draw_health_bar(self, win):
+        """
+        draw health bar above solder
+        :param win: surface
+        :return: None
+        """
+        #self.x,self.y为格子的左上位置
+        centre_site = (self.x+16,self.y+16)#由于人物是在格子中，取中心位置
+        length = 32 #血条长度
+        move_by = round(length / self.max_health)
+        health_bar = move_by * self.health#剩余血量
+
+        pygame.draw.rect(win, (255,0,0), (centre_site[0]-length/2, centre_site[1]-22, length, 5), 0)#需要根据实际微调
+        pygame.draw.rect(win, (0, 255, 0), (centre_site[0]-length/2, centre_site[1] - 22, health_bar, 5), 0)
 
     def draw(self, screen_surf, map_x, map_y):
         cell_x = self.char_id % 12 + int(self.frame)
         cell_y = self.char_id // 12 + self.dir
         self.draw_radius(screen_surf)
+        self.draw_health_bar(screen_surf)
         Sprite.draw(screen_surf, self.hero_surf, map_x + self.x, map_y + self.y, cell_x, cell_y)
 
     def show(self,x,y):
