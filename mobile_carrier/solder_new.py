@@ -164,9 +164,10 @@ class CharWalk:
         :return: None
         """
         #self.x,self.y为格子的左上位置
+
         centre_site = (self.x+16,self.y+16)#由于人物是在格子中，取中心位置
         length = 32 #血条长度
-        move_by = round(length / self.max_health)
+        move_by = length / self.max_health
         health_bar = move_by * self.health#剩余血量
 
         pygame.draw.rect(win, (255,0,0), (centre_site[0]-length/2, centre_site[1]-22, length, 5), 0)#需要根据实际微调
@@ -249,6 +250,7 @@ class CharWalk:
 
 
     def logic(self):
+
         self.move()
         # 如果角色正在移动，就不管它了
         if self.is_walking:
@@ -263,6 +265,7 @@ class CharWalk:
 
         else:  # 如果没走到终点，就往下一个格子走
             self.goto(self.path[self.path_index].x, self.path[self.path_index].y)
+
 
             #zmy 判断当前格子是否在攻击范围内
             dis = positionFunc.distanceCal(self.path[self.path_index].x,self.path[self.path_index].y,self.path[-1].x,self.path[-1].y)
