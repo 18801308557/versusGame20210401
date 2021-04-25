@@ -18,6 +18,7 @@ pause_button = pygame.transform.scale(pygame.image.load("./source/img/menu/pause
 other_button = pygame.transform.scale(pygame.image.load("./source/img/menu/othersetting.png"), (64, 64))
 
 
+
 class Game:
     def __init__(self, title, width, height, fps=60):
         """
@@ -212,7 +213,7 @@ class Game:
 
             #zmy 添加range,range = 100
             if (name =='Blue_solder') | (name=="Blue_weapon3") | (name=="Blue_weapon2") :
-                obj = CharWalk(role, role_index_list[name_list.index(name)], CharWalk.DIR_DOWN, mx, my, 70, 'blue',self.screen_surf)
+                obj = CharWalk(role, role_index_list[name_list.index(name)], CharWalk.DIR_DOWN, mx, my, 100, 'blue',self.screen_surf)
             else :
                 obj = CharWalk(role, role_index_list[name_list.index(name)], CharWalk.DIR_DOWN, mx, my, 70, 'red',self.screen_surf)
 
