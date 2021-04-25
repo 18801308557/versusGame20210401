@@ -124,6 +124,7 @@ class CharWalk:
         self.camp = camp #所属阵营
         self.screen = screen
         self.totalBulletNum = 50  # 总弹药量
+        self.isSelect = True
 
         self.is_walking = False  # 角色是否正在移动
         self.frame = 1  # 角色当前帧
@@ -144,9 +145,20 @@ class CharWalk:
         self.set_dest = False
         self.has_showed = False
 
+    def draw_radius(self,win):
+        if self.isSelect:
+            # draw range circle
+            radius = (int(self.range/32)+1.5)*32
+            surface = pygame.Surface((self.range * 4, self.range * 4), pygame.SRCALPHA, 32)
+            pygame.draw.circle(surface, (128, 128, 128, 100), (radius, radius), radius, 0)
+
+            win.blit(surface, (self.x+16 - radius, self.y+16 - radius))
+
+
     def draw(self, screen_surf, map_x, map_y):
         cell_x = self.char_id % 12 + int(self.frame)
         cell_y = self.char_id // 12 + self.dir
+        self.draw_radius(screen_surf)
         Sprite.draw(screen_surf, self.hero_surf, map_x + self.x, map_y + self.y, cell_x, cell_y)
 
     def show(self,x,y):
