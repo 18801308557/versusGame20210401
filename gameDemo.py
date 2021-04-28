@@ -4,6 +4,7 @@ import pygame
 
 from mobile_carrier.solder_new import GameMap, CharWalk, Sprite
 from menu.menu import horizontalMenu
+from  weapons.bullet import bullet
 
 side_img = pygame.transform.scale(pygame.image.load("./source/img/menu/bg1.png"), (640, 70))
 vertical_img = pygame.transform.scale(pygame.image.load("./source/img/menu/vbg.png"), (70,640))
@@ -58,12 +59,15 @@ class Game:
         self.weapon_list = []
         #初始化当前正在寻路的物体列表
         self.candidate_list = []
+
         #我们的攻击操作是先点击攻击者，再点击攻击目标，此处为是否有未设置目标的攻击者
         self.moving_candidate = None
 
         self.moving_object = None #此处存放ui拖拽的物体
 
+        self.listRes=[]
         self.update()
+
 
     def __init_pygame(self):
         """
@@ -81,6 +85,7 @@ class Game:
         self.hero = pygame.image.load('./source/img/character/hero.png').convert_alpha()
         self.map_bottom = pygame.image.load('./source/img/map/1.png').convert_alpha()
         self.map_top = pygame.image.load('./source/img/map/0_top.png').convert_alpha()
+
         self.game_map = GameMap(self.map_bottom, self.map_top, 0, 0)
         self.game_map.load_walk_file('./source/img/map/1.map')
 
@@ -88,17 +93,36 @@ class Game:
         self.role = CharWalk(self.hero, 48, CharWalk.DIR_DOWN, 5, 10,70, 'None',self.screen_surf)
 
     def update(self):
+        i=0
         while True:
             self.clock.tick(self.fps)
 
-
             # 逻辑更新
             for mobile in self.role_list:
-                mobile.logic()
+                self.listRes=mobile.logic()
+            if self.listRes:#返回的参数不为空，小人走到目的地，可以开始发射子弹
+                flag,oriX,oriY,tarX,tarY=self.listRes[0],self.listRes[1],self.listRes[2],self.listRes[3],self.listRes[4]
+                mobile_index = self.role_list.index(mobile)#记录哪个小人发射子弹的索引
+                while (flag and i<self.role_list[mobile_index].totalBulletNum/5):#当达到目的地开始发射子弹且移动的mobile还有子弹，先发射10枚子弹
+                    # print("循环中flag,oX,oY,tX,tY:", self.flag, oriX, oriY, tarX, tarY)
+                    b=bullet(self.screen_surf,oriX,oriY,tarX,tarY)#创建子弹
+                    i+=1
+                    while not b.judgeBullet():#没有击中目标/没有超出射程
+                        self.clock.tick(5)
+                        b.displayBullet()
+                        b.moveBullet()
+                        pygame.display.update()
+                        self.event_handler()
+                        # 画面更新
+                        self.game_map.draw_bottom(self.screen_surf)
+                        for mobile in self.role_list:
+                            mobile.draw(self.screen_surf, self.game_map.x, self.game_map.y)
+                        self.horizonMenu.draw(self.screen_surf)  # 绘制UI
+                        self.verticalMenu.draw(self.screen_surf)  # 绘制UI
+                flag=False#发射子弹完毕
             self.event_handler()
             # 画面更新
             self.game_map.draw_bottom(self.screen_surf)
-
             #是否有正在拖拽的物体
             if self.moving_object:
 

@@ -148,7 +148,10 @@ class CharWalk:
         self.set_dest = False
         self.has_showed = False
 
+        self.flag = False  # 标志发不发射子弹
+
     def draw_radius(self,win):
+        # 点击需要查看范围的物体
         if self.isSelect:
             # draw range circle
             radius = (int(self.range/32)+1.5)*32
@@ -274,8 +277,9 @@ class CharWalk:
             if dis <= int(self.range/32):
                 while len(self.path) > self.path_index+1:
                     self.path.pop()
-                b = bullet(self.screen,self.path[self.path_index].x,self.path[self.path_index].y, t_x, t_y)
-                b.moveBullet()
+                self.flag=True
+                return [self.flag,self.path[self.path_index].x,self.path[self.path_index].y, t_x, t_y]
+
             self.path_index += 1
 
 
