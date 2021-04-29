@@ -14,7 +14,7 @@ class bullet():
         self.currentX=oriX*32
         self.currentY=oriY*32
         #攻击目标点
-        self.targetX=(tarX)*32
+        self.targetX=tarX*32
         self.targetY=tarY*32
         # 获得子弹矩形(x, y, width, height)，操作矩形进行旋转
         self.rect = self.image.get_rect()
@@ -25,9 +25,6 @@ class bullet():
         # 移动速度
         self.speed = 5
         self.direction=0#表示方向
-
-        self.clock = pygame.time.Clock()
-        self.fps=2
 
     #设置图片位置
     def setRectPos(self):
@@ -58,7 +55,7 @@ class bullet():
     # 显示子弹
     def displayBullet(self):
         self.main_scene.blit(self.image, (self.currentX, self.currentY))
-        print("显示:", self.currentX, self.currentY, self.rect.x, self.rect.y)
+        print("显示:", self.currentX, self.currentY, self.targetX, self.targetY)
 
     def moveBullet(self):
         self.getDirection()
@@ -67,10 +64,10 @@ class bullet():
         # 移动 1:右 2 左 3 下  4上
         x_dis = self.targetX - self.ori_X
         y_dis = self.targetY - self.ori_Y
-        # self.currentX +=(x_dis/y_dis)*self.speed
-        # self.currentY += self.speed
-        #x_dis
+        print("x_dis:",x_dis,",y_dis:",y_dis)
+        #y方向没有变化，x方向移动
         if y_dis==0:
+            print("1")
             if self.targetX>self.ori_X:
                 self.currentX += self.speed
                 if self.currentX>self.targetX:
@@ -79,10 +76,9 @@ class bullet():
                 self.currentX -= self.speed
                 if self.currentX<self.targetX:
                     self.currentX=self.targetX
-
-
-
+        #x方向没有变化，y方向移动
         elif x_dis==0:
+            print("2")
             if self.targetY>self.ori_Y:
                 self.currentY += self.speed
                 if self.currentY>self.targetY:
@@ -91,17 +87,19 @@ class bullet():
                 self.currentY -= self.speed
                 if self.currentY<self.targetY:
                     self.currentY=self.targetY
+        #x,y方向都变化
         else:
+            print("3")
+            # x方向，不足一步走的则直接走到终点，保证不越过终点，x_dis/y_dis表示x与y方向行走的比率，即同时达到终点其速度与距离成正比
             if math.fabs(self.currentX-self.targetX)<math.fabs((x_dis/y_dis)*self.speed):
                 self.currentX=self.targetX
             else:
+                #在x方向上足够一步移动的，则判断向哪个方向移动
                 if x_dis>0:
-                    self.currentX += (x_dis / y_dis) * self.speed
+                    self.currentX += math.fabs((x_dis/y_dis)*self.speed)
                 else:
-                    self.currentX -= (x_dis / y_dis) * self.speed
-
-
-
+                    self.currentX -= math.fabs((x_dis/y_dis)*self.speed)
+            #在y方向不够一步移动的，则直接走到终点
             if math.fabs(self.currentY-self.targetY)<self.speed:
                 self.currentY=self.targetY
             else:
@@ -109,7 +107,6 @@ class bullet():
                     self.currentY +=self.speed
                 else:
                     self.currentY -= self.speed
-
 
         # if self.direction == 1:  # 右
         #     self.currentX += self.speed

@@ -105,13 +105,13 @@ class Game:
             if self.listRes:#返回的参数不为空，小人走到目的地，可以开始发射子弹
                 flag,oriX,oriY,tarX,tarY=self.listRes[0],self.listRes[1],self.listRes[2],self.listRes[3],self.listRes[4]
                 mobile_index = self.role_list.index(mobile)#记录哪个小人发射子弹的索引
-                #self.role_list[mobile_index].totalBulletNum / 2
-
-                if flag and self.role_list[mobile_index].totalBulletNum- self.role_list[mobile_index].fireBulletNum>=5:
+                # 当达到目的地开始发射子弹且移动的mobile还有子弹
+                if flag and self.role_list[mobile_index].fireBulletNum < self.role_list[mobile_index].totalBulletNum:
                     i = 0
-                    while (i<5):#当达到目的地开始发射子弹且移动的mobile还有子弹，先发射10枚子弹
-                        # print("循环中flag,oX,oY,tX,tY:", self.flag, oriX, oriY, tarX, tarY)
-
+                    while (i < 3):  # 每次发射3枚子弹
+                        if self.role_list[mobile_index].fireBulletNum >= self.role_list[mobile_index].totalBulletNum:
+                            print("子弹不足,跳出发射子弹的循环！！")
+                            break
                         b=bullet(self.screen_surf,oriX,oriY,tarX,tarY)#创建子弹
                         self.role_list[mobile_index].fireBulletNum+=1
                         i+=1
@@ -127,10 +127,10 @@ class Game:
                                 mobile.draw(self.screen_surf, self.game_map.x, self.game_map.y)
                             self.horizonMenu.draw(self.screen_surf)  # 绘制UI
                             self.verticalMenu.draw(self.screen_surf)  # 绘制UI
-
-                    flag=False#发射子弹完毕
-
-                    self.role_list[mobile_index].flag=False
+                    flag = False  # 发射子弹完毕
+                    print(i, "枚发射子弹完毕flag:", flag)
+                    self.role_list[mobile_index].flag = False
+                    print("已经发射子弹数量：", self.role_list[mobile_index].fireBulletNum)
 
             self.event_handler()
             # 画面更新
