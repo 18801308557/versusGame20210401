@@ -124,7 +124,7 @@ class CharWalk:
         self.range = range
         self.camp = camp #所属阵营
         self.screen = screen
-        self.totalBulletNum = 50  # 总弹药量
+        self.totalBulletNum = 10  # 总弹药量
         self.health = 100 #现有血量
         self.max_health = 100 # 初始血量
         self.isSelect = True
@@ -261,12 +261,13 @@ class CharWalk:
 
         # 如果寻路走到终点了
         if self.path_index == len(self.path):
-
+            #print("ifff")
             self.path = []
             self.frame = 1
             self.path_index = 0
 
         else:  # 如果没走到终点，就往下一个格子走
+            #print("else",self.path_index,self.path)
             self.goto(self.path[self.path_index].x, self.path[self.path_index].y)
 
 
@@ -278,9 +279,13 @@ class CharWalk:
                 while len(self.path) > self.path_index+1:
                     self.path.pop()
                 self.flag=True
-                return [self.flag,self.path[self.path_index].x,self.path[self.path_index].y, t_x, t_y]
+                self.is_walking = False
+                #print("aaa", self.path_index, len(self.path))
+                if self.path_index != 0 and self.totalBulletNum>0:
+                  return [self.flag,self.path[self.path_index-1].x,self.path[self.path_index-1].y, t_x, t_y]
 
             self.path_index += 1
+
 
 
 

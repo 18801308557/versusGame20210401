@@ -64,26 +64,28 @@ class bullet():
         print("起点：(", self.currentX, ",", self.currentY, ");终点：", self.targetX, ",", self.targetY, ")")
         # 移动 1:右 2 左 3 下  4上
 
-        if self.direction == 1:  # 右
-            self.currentX += self.speed
-            print("向右走")
-            if self.currentX > self.targetX:
-                self.currentX = self.targetX
-        elif self.direction == 2:  # 左
-            self.currentX -= self.speed
-            print("向左走")
-            if self.currentX < self.targetX:
-                self.currentX = self.targetX
-        elif self.direction == 3:  # 下
-            self.currentY -= self.speed
-            print("向下走")
-            if self.currentY < self.targetY:
-                self.currentY = self.targetY
-        elif self.direction == 4:  # 上
-            self.currentY += self.speed
-            print("向上走")
-            if self.currentY > self.targetY:
-                self.currentY = self.targetY
+
+
+        # if self.direction == 1:  # 右
+        #     self.currentX += self.speed
+        #     print("向右走")
+        #     if self.currentX > self.targetX:
+        #         self.currentX = self.targetX
+        # elif self.direction == 2:  # 左
+        #     self.currentX -= self.speed
+        #     print("向左走")
+        #     if self.currentX < self.targetX:
+        #         self.currentX = self.targetX
+        # elif self.direction == 3:  # 下
+        #     self.currentY -= self.speed
+        #     print("向下走")
+        #     if self.currentY < self.targetY:
+        #         self.currentY = self.targetY
+        # elif self.direction == 4:  # 上
+        #     self.currentY += self.speed
+        #     print("向上走")
+        #     if self.currentY > self.targetY:
+        #         self.currentY = self.targetY
         # 更新当前图片位置点
         self.setRectPos()
         print(self.rect.x, self.rect.y)

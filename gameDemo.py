@@ -100,12 +100,17 @@ class Game:
             # 逻辑更新
             for mobile in self.role_list:
                 self.listRes=mobile.logic()
+                #print("111",mobile.path)
+
             if self.listRes:#返回的参数不为空，小人走到目的地，可以开始发射子弹
                 flag,oriX,oriY,tarX,tarY=self.listRes[0],self.listRes[1],self.listRes[2],self.listRes[3],self.listRes[4]
                 mobile_index = self.role_list.index(mobile)#记录哪个小人发射子弹的索引
-                while (flag and i<self.role_list[mobile_index].totalBulletNum/5):#当达到目的地开始发射子弹且移动的mobile还有子弹，先发射10枚子弹
+                #self.role_list[mobile_index].totalBulletNum / 2
+                print("111",i)
+                while (flag and i<5):#当达到目的地开始发射子弹且移动的mobile还有子弹，先发射10枚子弹
                     # print("循环中flag,oX,oY,tX,tY:", self.flag, oriX, oriY, tarX, tarY)
                     b=bullet(self.screen_surf,oriX,oriY,tarX,tarY)#创建子弹
+                    self.role_list[mobile_index].totalBulletNum-=1
                     i+=1
                     while not b.judgeBullet():#没有击中目标/没有超出射程
                         self.clock.tick(5)
@@ -119,7 +124,9 @@ class Game:
                             mobile.draw(self.screen_surf, self.game_map.x, self.game_map.y)
                         self.horizonMenu.draw(self.screen_surf)  # 绘制UI
                         self.verticalMenu.draw(self.screen_surf)  # 绘制UI
+
                 flag=False#发射子弹完毕
+            i = 0
             self.event_handler()
             # 画面更新
             self.game_map.draw_bottom(self.screen_surf)
@@ -154,17 +161,14 @@ class Game:
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_x, mouse_y = pygame.mouse.get_pos()
 
+
                 #获取当前鼠标所在格子
                 mx = (mouse_x - self.game_map.x) // 32
                 my = (mouse_y - self.game_map.y) // 32
-
+                print("点击",mx,my )
                 #如果当前拖拽的物体放置下来了
                 if self.moving_object:
                     print("check1")
-                    if self.moving_object.camp == 'blue':
-                        pygame.draw.circle(self.screen_surf,(255,0,0),(mx,my),200,width=10)
-                    print("画图结束")
-
                     #已放置好，将其添加到角色列表
                     self.role_list.append(self.moving_object)
                     # self.role.show(mx,my)
@@ -187,7 +191,17 @@ class Game:
                         #如果当前存在一个未设置目标的攻击者，就把当前点击的空地位置传给他
                         #此处也就完成了我们的攻击方式第二步，设置攻击的目标位置
                         #因此需要将moving_candidate置为空，方便对下一个点击的物体操作
+
+                        # 初始化当前正在寻路的物体列表
+                        #self.candidate_list = []
+
+                        # 我们的攻击操作是先点击攻击者，再点击攻击目标，此处为是否有未设置目标的攻击者
+                        #self.moving_candidate = None
+
+                        print(" canddidate if", self.candidate_list)
+                       # print(self.moving_candidate,self.moving_candidate.set_dest)
                         if self.moving_candidate and self.moving_candidate.set_dest is False:
+                            print("if moving", self.moving_candidate)
                             self.moving_candidate.dest_mx = mx
                             self.moving_candidate.dest_my = my
                             self.moving_candidate.set_dest = True
@@ -195,6 +209,8 @@ class Game:
 
                     #如果当前点击了一个物体，就该给他分配攻击对象了
                     else:
+
+                        print("canddidate  else",self.candidate_list)
                         #我们将所有正在去攻击对象的路上的物体存放在candidate_list中
                         #因为我们可能再一次点击他，表示要重新给他分配攻击对象
                         #因此标志位set_dest置为false
@@ -208,7 +224,7 @@ class Game:
 
                     # 菜单的点击
                     if side_menu_button:
-                        print(side_menu_button)
+                        print("side_menu_button",side_menu_button)
                         #点击的是水平菜单中的按钮就触发相应事件
                         self.add_weapon(side_menu_button)
 
@@ -219,7 +235,7 @@ class Game:
                     #对当前有了攻击对象的物体，进行寻路分配
                     for set_role in self.candidate_list:
 
-                        print(set_role.next_mx, set_role.next_my)
+                        print("路径",set_role.next_mx, set_role.next_my)
                         set_role.find_path(self.game_map, (set_role.dest_mx, set_role.dest_my),self.screen_surf)
 
     def add_weapon(self, name):
@@ -238,9 +254,9 @@ class Game:
 
             #zmy 添加range,range = 100
             if (name =='Blue_solder') | (name=="Blue_weapon3") | (name=="Blue_weapon2") :
-                obj = CharWalk(role, role_index_list[name_list.index(name)], CharWalk.DIR_DOWN, mx, my, 100, 'blue',self.screen_surf)
+                obj = CharWalk(role, role_index_list[name_list.index(name)], CharWalk.DIR_DOWN, mx, my, 50, 'blue',self.screen_surf)
             else :
-                obj = CharWalk(role, role_index_list[name_list.index(name)], CharWalk.DIR_DOWN, mx, my, 70, 'red',self.screen_surf)
+                obj = CharWalk(role, role_index_list[name_list.index(name)], CharWalk.DIR_DOWN, mx, my, 50, 'red',self.screen_surf)
 
             self.moving_object = obj
             # obj.moving = True
