@@ -93,7 +93,7 @@ class Game:
         self.role = CharWalk(self.hero, 48, CharWalk.DIR_DOWN, 5, 10,70, 'None',self.screen_surf)
 
     def update(self):
-        i=0
+
         while True:
             self.clock.tick(self.fps)
 
@@ -106,27 +106,32 @@ class Game:
                 flag,oriX,oriY,tarX,tarY=self.listRes[0],self.listRes[1],self.listRes[2],self.listRes[3],self.listRes[4]
                 mobile_index = self.role_list.index(mobile)#记录哪个小人发射子弹的索引
                 #self.role_list[mobile_index].totalBulletNum / 2
-                print("111",i)
-                while (flag and i<5):#当达到目的地开始发射子弹且移动的mobile还有子弹，先发射10枚子弹
-                    # print("循环中flag,oX,oY,tX,tY:", self.flag, oriX, oriY, tarX, tarY)
-                    b=bullet(self.screen_surf,oriX,oriY,tarX,tarY)#创建子弹
-                    self.role_list[mobile_index].totalBulletNum-=1
-                    i+=1
-                    while not b.judgeBullet():#没有击中目标/没有超出射程
-                        self.clock.tick(5)
-                        b.displayBullet()
-                        b.moveBullet()
-                        pygame.display.update()
-                        self.event_handler()
-                        # 画面更新
-                        self.game_map.draw_bottom(self.screen_surf)
-                        for mobile in self.role_list:
-                            mobile.draw(self.screen_surf, self.game_map.x, self.game_map.y)
-                        self.horizonMenu.draw(self.screen_surf)  # 绘制UI
-                        self.verticalMenu.draw(self.screen_surf)  # 绘制UI
 
-                flag=False#发射子弹完毕
-            i = 0
+                if flag and self.role_list[mobile_index].totalBulletNum- self.role_list[mobile_index].fireBulletNum>=5:
+                    i = 0
+                    while (i<5):#当达到目的地开始发射子弹且移动的mobile还有子弹，先发射10枚子弹
+                        # print("循环中flag,oX,oY,tX,tY:", self.flag, oriX, oriY, tarX, tarY)
+
+                        b=bullet(self.screen_surf,oriX,oriY,tarX,tarY)#创建子弹
+                        self.role_list[mobile_index].fireBulletNum+=1
+                        i+=1
+                        while not b.judgeBullet():#没有击中目标/没有超出射程
+                            self.clock.tick(5)
+                            b.displayBullet()
+                            b.moveBullet()
+                            pygame.display.update()
+                            self.event_handler()
+                            # 画面更新
+                            self.game_map.draw_bottom(self.screen_surf)
+                            for mobile in self.role_list:
+                                mobile.draw(self.screen_surf, self.game_map.x, self.game_map.y)
+                            self.horizonMenu.draw(self.screen_surf)  # 绘制UI
+                            self.verticalMenu.draw(self.screen_surf)  # 绘制UI
+
+                    flag=False#发射子弹完毕
+
+                    self.role_list[mobile_index].flag=False
+
             self.event_handler()
             # 画面更新
             self.game_map.draw_bottom(self.screen_surf)
@@ -205,11 +210,12 @@ class Game:
                             self.moving_candidate.dest_mx = mx
                             self.moving_candidate.dest_my = my
                             self.moving_candidate.set_dest = True
+                            self.moving_candidate.choose = False
                             self.moving_candidate = None
 
                     #如果当前点击了一个物体，就该给他分配攻击对象了
                     else:
-
+                        candidate_role.choose = True
                         print("canddidate  else",self.candidate_list)
                         #我们将所有正在去攻击对象的路上的物体存放在candidate_list中
                         #因为我们可能再一次点击他，表示要重新给他分配攻击对象

@@ -14,14 +14,16 @@ class bullet():
         self.currentX=oriX*32
         self.currentY=oriY*32
         #攻击目标点
-        self.targetX=(tarX+1)*32
+        self.targetX=(tarX)*32
         self.targetY=tarY*32
         # 获得子弹矩形(x, y, width, height)，操作矩形进行旋转
         self.rect = self.image.get_rect()
         self.rect.x=self.currentX
         self.rect.y=self.currentY
+        self.ori_X = oriX*32
+        self.ori_Y = oriY * 32
         # 移动速度
-        self.speed = 10
+        self.speed = 5
         self.direction=0#表示方向
 
         self.clock = pygame.time.Clock()
@@ -63,7 +65,50 @@ class bullet():
         print("方向=", self.direction)
         print("起点：(", self.currentX, ",", self.currentY, ");终点：", self.targetX, ",", self.targetY, ")")
         # 移动 1:右 2 左 3 下  4上
+        x_dis = self.targetX - self.ori_X
+        y_dis = self.targetY - self.ori_Y
+        # self.currentX +=(x_dis/y_dis)*self.speed
+        # self.currentY += self.speed
+        #x_dis
+        if y_dis==0:
+            if self.targetX>self.ori_X:
+                self.currentX += self.speed
+                if self.currentX>self.targetX:
+                    self.currentX=self.targetX
+            else:
+                self.currentX -= self.speed
+                if self.currentX<self.targetX:
+                    self.currentX=self.targetX
 
+
+
+        elif x_dis==0:
+            if self.targetY>self.ori_Y:
+                self.currentY += self.speed
+                if self.currentY>self.targetY:
+                    self.currentY=self.targetY
+            else:
+                self.currentY -= self.speed
+                if self.currentY<self.targetY:
+                    self.currentY=self.targetY
+        else:
+            if math.fabs(self.currentX-self.targetX)<math.fabs((x_dis/y_dis)*self.speed):
+                self.currentX=self.targetX
+            else:
+                if x_dis>0:
+                    self.currentX += (x_dis / y_dis) * self.speed
+                else:
+                    self.currentX -= (x_dis / y_dis) * self.speed
+
+
+
+            if math.fabs(self.currentY-self.targetY)<self.speed:
+                self.currentY=self.targetY
+            else:
+                if y_dis>0:
+                    self.currentY +=self.speed
+                else:
+                    self.currentY -= self.speed
 
 
         # if self.direction == 1:  # 右

@@ -125,6 +125,7 @@ class CharWalk:
         self.camp = camp #所属阵营
         self.screen = screen
         self.totalBulletNum = 10  # 总弹药量
+        self.fireBulletNum=0
         self.health = 100 #现有血量
         self.max_health = 100 # 初始血量
         self.isSelect = True
@@ -149,6 +150,7 @@ class CharWalk:
         self.has_showed = False
 
         self.flag = False  # 标志发不发射子弹
+        self.choose = False # 标志是否被选中
 
     def draw_radius(self,win):
         # 点击需要查看范围的物体
@@ -179,6 +181,8 @@ class CharWalk:
     def draw(self, screen_surf, map_x, map_y):
         cell_x = self.char_id % 12 + int(self.frame)
         cell_y = self.char_id // 12 + self.dir
+        if self.choose:
+            pygame.draw.rect(screen_surf,(255,0,0),(self.x,self.y,32,32),2)
         self.draw_radius(screen_surf)
         self.draw_health_bar(screen_surf)
         Sprite.draw(screen_surf, self.hero_surf, map_x + self.x, map_y + self.y, cell_x, cell_y)
@@ -260,14 +264,17 @@ class CharWalk:
             return
 
         # 如果寻路走到终点了
-        if self.path_index == len(self.path):
+        if self.path_index == len(self.path) :
             #print("ifff")
+            self.path = []
+            self.frame = 1
+            self.path_index = 0
+        elif self.path_index!= 0 and  self.path_index+1 == len(self.path):
             self.path = []
             self.frame = 1
             self.path_index = 0
 
         else:  # 如果没走到终点，就往下一个格子走
-            #print("else",self.path_index,self.path)
             self.goto(self.path[self.path_index].x, self.path[self.path_index].y)
 
 
@@ -281,7 +288,8 @@ class CharWalk:
                 self.flag=True
                 self.is_walking = False
                 #print("aaa", self.path_index, len(self.path))
-                if self.path_index != 0 and self.totalBulletNum>0:
+                if self.path_index != 0 :
+                  print("return",self.path[self.path_index-1].x,self.path[self.path_index-1].y, t_x, t_y)
                   return [self.flag,self.path[self.path_index-1].x,self.path[self.path_index-1].y, t_x, t_y]
 
             self.path_index += 1
