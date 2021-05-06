@@ -24,78 +24,6 @@ class Sprite:
         """
         dest.blit(source, (x, y), (cell_x * cell_w, cell_y * cell_h, cell_w, cell_h))
 
-
-class Array2D:
-    """
-        说明：
-            1.构造方法需要两个参数，即二维数组的宽和高
-            2.成员变量w和h是二维数组的宽和高
-            3.使用：‘对象[x][y]’可以直接取到相应的值
-            4.数组的默认值都是0
-    """
-
-    def __init__(self, w, h, default=0):
-        self.w = w
-        self.h = h
-        self.data = []
-        self.data = [[default for y in range(h)] for x in range(w)]
-
-    def show_array2d(self):
-        for y in range(self.h):
-            for x in range(self.w):
-                print(self.data[x][y], end=' ')
-            print("")
-
-    def __getitem__(self, item):
-        return self.data[item]
-
-
-class GameMap(Array2D):
-    """
-    游戏地图类
-    """
-
-    def __init__(self, bottom, top, x, y):
-        # 将地图划分成w*h个小格子，每个格子32*32像素
-        w = int(bottom.get_width() / 32)
-        h = int(bottom.get_height() / 32)
-        super().__init__(w, h)
-        self.bottom = bottom
-        self.top = top
-        self.x = x
-        self.y = y
-
-    def draw_bottom(self, screen_surf):
-        screen_surf.blit(self.bottom, (self.x, self.y))
-
-    def draw_top(self, screen_surf):
-        screen_surf.blit(self.top, (self.x, self.y))
-
-    def draw_grid(self, screen_surf):
-        """
-        画网格
-        """
-        for x in range(self.w):
-            for y in range(self.h):
-                if self[x][y] == 0:  # 不是障碍，画空心的矩形
-                    pygame.draw.rect(screen_surf, (255, 255, 255), (self.x + x * 32, self.y + y * 32, 32, 32), 1)
-                else:  # 是障碍，画黑色实心的矩形
-                    pygame.draw.rect(screen_surf, (0, 0, 0), (self.x + x * 32 + 1, self.y + y * 32 + 1, 30, 30), 0)
-
-    def load_walk_file(self, path):
-        """
-        读取可行走区域文件
-        """
-        with open(path, 'r') as file:
-            for x in range(self.w):
-                for y in range(self.h+1):
-
-                    v = int(file.readline())
-                    if y!=self.h:
-                        self[x][y] = v
-        # self.show_array2d()
-
-
 class CharWalk:
     """
     人物行走类 char是character的缩写
@@ -129,6 +57,7 @@ class CharWalk:
         self.health = 100 #现有血量
         self.max_health = 100 # 初始血量
         self.isSelect = True
+        self.live = True #物体是否存活
 
         self.is_walking = False  # 角色是否正在移动
         self.frame = 1  # 角色当前帧
@@ -147,17 +76,22 @@ class CharWalk:
         # 当前路径下标
         self.path_index = 0
         self.set_dest = False
-        self.has_showed = False
+        #self.has_showed = False
 
         self.flag = False  # 标志发不发射子弹
         self.choose = False # 标志是否被选中
+        self.bullet_list =[]
+        self.shot_frequency = 0  # 射击频率
+
+    def draw_bullet(self,dest_mx,dest_my):
+        pass
 
     def draw_radius(self,win):
         # 点击需要查看范围的物体
         if self.isSelect:
             # draw range circle
-            radius = (int(self.range/32)+1.5)*32
-            surface = pygame.Surface((self.range * 4, self.range * 4), pygame.SRCALPHA, 32)
+            radius = self.range
+            surface = pygame.Surface((self.range * 4, self.range * 4), pygame.SRCALPHA,32)
             pygame.draw.circle(surface, (128, 128, 128, 100), (radius, radius), radius, 0)
 
             win.blit(surface, (self.x+16 - radius, self.y+16 - radius))
@@ -196,7 +130,6 @@ class CharWalk:
     def get_clicked(self,X,Y):
         if X <= self.x + 32 and X >= self.x:
             if Y <= self.y + 32 and Y >= self.y:
-
                 return True
         return False
 
@@ -220,6 +153,14 @@ class CharWalk:
             self.dir = CharWalk.DIR_UP
 
         self.is_walking = True
+
+    #增加子弹射击函数 每次计数到阈值就增加一颗子弹
+    def shot(self,t_x,t_y):
+        self.shot_frequency+=1
+        if  self.shot_frequency == 50 and self.totalBulletNum>0:
+            self.bullet_list.append(bullet(self.mx,self.my,t_x,t_y))
+            self.totalBulletNum -=1
+            self.shot_frequency = 0
 
     def move(self):
         if not self.is_walking:
@@ -279,23 +220,19 @@ class CharWalk:
 
 
             #zmy 判断当前格子是否在攻击范围内
-            dis = positionFunc.distanceCal(self.path[self.path_index].x,self.path[self.path_index].y,self.path[-1].x,self.path[-1].y)
+            dis = positionFunc.distanceCal(self.x,self.y,self.path[-1].x*32,self.path[-1].y*32)
             t_x =self.path[-1].x
             t_y = self.path[-1].y
-            if dis <= int(self.range/32):
+            if dis <= self.range:
                 while len(self.path) > self.path_index+1:
                     self.path.pop()
                 self.flag=True
                 self.is_walking = False
-                #print("aaa", self.path_index, len(self.path))
-                if self.path_index != 0 :
-                  print("return",self.path[self.path_index-1].x,self.path[self.path_index-1].y, t_x, t_y)
-                  return [self.flag,self.path[self.path_index-1].x,self.path[self.path_index-1].y, t_x, t_y]
-
+                if self.path and self.bullet_list is not []:
+                    #修改了一下此处触发事件
+                    self.shot(t_x,t_y)
+                    #self.bullet_list=(self.mx,self.my,t_x,t_y)
             self.path_index += 1
-
-
-
 
     def find_path(self, map2d, end_point,screen):
         """
@@ -304,10 +241,10 @@ class CharWalk:
         """
 
 
-        print("end_point",end_point)
+        #print("end_point",end_point)
         start_point = (self.mx, self.my)
 
-        print("start_point",start_point)
+        #print("start_point",start_point)
         path = AStar(map2d, start_point, end_point).start()
 
         if path is None:

@@ -1,11 +1,11 @@
 import sys
 import os
 import pygame
-
-from mobile_carrier.solder_new import GameMap, CharWalk, Sprite
+from Map import  GameMap
+from mobile_carrier.solder_new import  CharWalk, Sprite
 from menu.menu import horizontalMenu
 from  weapons.bullet import bullet
-
+import positionFunc
 side_img = pygame.transform.scale(pygame.image.load("./source/img/menu/bg1.png"), (640, 70))
 vertical_img = pygame.transform.scale(pygame.image.load("./source/img/menu/vbg.png"), (70,640))
 Blue_solder = pygame.transform.scale(pygame.image.load("./source/img/menu/Blue_solder.png"), (64, 64))
@@ -27,13 +27,14 @@ class Game:
         :param width: 游戏窗口的宽度
         :param height: 游戏窗口的高度
         :param fps: 游戏每秒刷新次数
+        :param status: 游戏状态
         """
         self.title = title
         self.width = width
         self.height = height
         self.screen_surf = None
         self.fps = fps
-
+        self.status = 'pause'#游戏状态默认为暂停
         self.__init_pygame()
         self.__init_game()
 
@@ -50,22 +51,21 @@ class Game:
         #增加游戏的垂直主菜单，开始暂停
         self.verticalMenu = horizontalMenu(self.width-vertical_img.get_width(),0,vertical_img,'vertical')
         #垂直菜单增加按键
-        self.verticalMenu.add_btn(Start_button,"start",0)
-        self.verticalMenu.add_btn(pause_button,"pause",0)
-        self.verticalMenu.add_btn(other_button,"other",0)
+        self.verticalMenu.add_btn(Start_button,"start",0)#开始按钮
+        self.verticalMenu.add_btn(pause_button,"pause",0)#暂停按钮
+        self.verticalMenu.add_btn(other_button,"other",0)#其他按钮
         #初始化角色列表
-        self.role_list = []
-        #初始化武器列表
-        self.weapon_list = []
-        #初始化当前正在寻路的物体列表
-        self.candidate_list = []
+        #self.role_list = []
+
+        self.red_list = []#初始化红方角色列表
+        self.blue_list = []#初始化蓝方角色列表
+        self.weapon_list = []#初始化武器列表
+        #self.candidate_list = []#初始化当前正在寻路的物体列表
 
         #我们的攻击操作是先点击攻击者，再点击攻击目标，此处为是否有未设置目标的攻击者
         self.moving_candidate = None
 
         self.moving_object = None #此处存放ui拖拽的物体
-
-        self.listRes=[]
         self.update()
 
 
@@ -73,84 +73,118 @@ class Game:
         """
         pygame相关的初始化操作
         """
-        pygame.init()
-        pygame.display.set_caption(self.title)
-        self.screen_surf = pygame.display.set_mode([self.width, self.height])
-        self.clock = pygame.time.Clock()
+        pygame.init()#pygmae包导入
+        pygame.display.set_caption(self.title)#设置标题
+        self.screen_surf = pygame.display.set_mode([self.width, self.height])#设置显示窗口大小
+        self.clock = pygame.time.Clock()#设置时钟
 
     def __init_game(self):
         """
         我们游戏的一些初始化操作
         """
+        #导入角色图片，包括8种角色的各个方向显示
         self.hero = pygame.image.load('./source/img/character/hero.png').convert_alpha()
+        #地图背景图片的放置
         self.map_bottom = pygame.image.load('./source/img/map/1.png').convert_alpha()
-        self.map_top = pygame.image.load('./source/img/map/0_top.png').convert_alpha()
 
-        self.game_map = GameMap(self.map_bottom, self.map_top, 0, 0)
-        self.game_map.load_walk_file('./source/img/map/1.map')
+        self.game_map = GameMap(self.map_bottom, 0, 0) # 根据当前地图相关参数进行地图初始化
+        self.game_map.load_walk_file('./source/img/map/1.map')#根据地图的显示，我们规定了一些不可到达的区域，导入该文件。
 
-        # zmy 添加range参数,range = 70
-        self.role = CharWalk(self.hero, 48, CharWalk.DIR_DOWN, 5, 10,70, 'None',self.screen_surf)
+
+    # 直接将红蓝双方进行一一配对，在之后的策略中需要改进该函数
+    def init_stratege(self):
+        #将红方蓝方目标体一一对应（也就是之后需要做的策略）
+        for red_army,blue_army in zip(self.red_list,self.blue_list):
+            #看是否设置过了目标
+            #if not red_army.set_dest:
+                #print(red_army,blue_army)
+            red_army.dest_mx = blue_army.mx
+            red_army.dest_my = blue_army.my
+                #red_army.set_dest  =True
+
+    # 将阵营中物体显示出来 并更新是否存活
+    def load_camp(self,camp):
+        for army in camp:# 遍历所有阵营
+            if army.live:#如果存活就将其绘制在屏幕上
+                army.draw(self.screen_surf, self.game_map.x, self.game_map.y)
+
+            else:#如果不存活，就将其删除
+                camp.remove(army)
+
+    # 红方子弹绘制  将子弹显示出来，并更新子弹是否需要继续发射
+    def load_bullet_red(self):
+        for role in self.red_list:#遍历红方阵营
+            for b in role.bullet_list:#对于每一个士兵其存有一个子弹list
+                target = self.choose_role(self.blue_list,b.targetX,b.targetY)#需要攻击的位置是否存在物体
+                if b.live and target:#如果当前子弹没有到目标位置（也就是存活） 且目标地址存在物体（因为蓝方是静止的，如果不存在物体说明已经消灭）
+                    b.displayBullet(self.screen_surf)#绘制子弹
+                    b.moveBullet()#子弹移动的逻辑
+                    b.hit_target(target)#检测子弹是否和物体碰撞
+                else:
+                    role.bullet_list.remove(b)#子弹发生碰撞后 或目标物体毁灭 子弹就该消失了
+
+    #蓝方子弹绘制  将子弹显示出来，并更新子弹是否需要继续发射
+    def load_bullet_blue(self):
+        for role in self.blue_list:#遍历蓝方阵营
+            for b in role.bullet_list:#对于每一个士兵其存有一个子弹list
+                target = self.choose_role(self.red_list,b.targetX,b.targetY)#需要攻击的位置是否存在物体
+                if b.live:#与红方判断条件区别开来（目前的设定是不跟踪的，因为红方是移动方，所以子弹不一定会打中红方）
+                    b.displayBullet(self.screen_surf)#绘制子弹
+                    b.moveBullet()#子弹移动的逻辑
+                    if target:#如果有目标在，就需要考虑是否碰撞了（此处存在一点问题，物体在移动过程中发生碰撞，是否也需要考虑？）
+                        b.hit_target(target)
+                else:
+                    role.bullet_list.remove(b)#子弹发生碰撞后 或目标物体毁灭 子弹就该消失了
+
+    # 考虑在何种情况下需要创造蓝方的子弹
+    def set_bullet_blue(self):
+        for src in self.blue_list:#遍历蓝方阵营
+            for dst in self.red_list:#遍历红方阵营
+                if positionFunc.distanceInR(src.x,src.y,src.range,dst.x,dst.y): # 检测是否有物体存在于可攻击范围内
+                    #print(dst.x,dst.y)
+                    src.shot(dst.mx,dst.my)#如果范围内存在物体，就攻击他（此处也需要考虑一些问题，比如是否先毁灭范围内一个物体，还是每个都打）
+
 
     def update(self):
-
+        """
+        更新相关事件
+        :return:
+        """
         while True:
-            self.clock.tick(self.fps)
+            self.clock.tick(self.fps)#更新时钟
 
-            # 逻辑更新
-            for mobile in self.role_list:
-                self.listRes=mobile.logic()
-                #print("111",mobile.path)
+            self.event_handler()#处理游戏点击等事件
+            self.game_map.draw_bottom(self.screen_surf)# 画面更新
+            if self.status == 'pause':#游戏暂停的时候可以进行布局
+                #是否有正在拖拽的物体
+                if self.moving_object:
+                    m_x, m_y = pygame.mouse.get_pos()#获取鼠标点击位置
+                    mx = (m_x - self.game_map.x) // 32 #获取位置对应的二维数组下标
+                    my = (m_y - self.game_map.y) // 32
+                    self.moving_object.show(mx, my)#重新设置物体的格子位置
+                    self.moving_object.draw(self.screen_surf, self.game_map.x, self.game_map.y)
 
-            if self.listRes:#返回的参数不为空，小人走到目的地，可以开始发射子弹
-                flag,oriX,oriY,tarX,tarY=self.listRes[0],self.listRes[1],self.listRes[2],self.listRes[3],self.listRes[4]
-                mobile_index = self.role_list.index(mobile)#记录哪个小人发射子弹的索引
-                # 当达到目的地开始发射子弹且移动的mobile还有子弹
-                if flag and self.role_list[mobile_index].fireBulletNum < self.role_list[mobile_index].totalBulletNum:
-                    i = 0
-                    while (i < 3):  # 每次发射3枚子弹
-                        if self.role_list[mobile_index].fireBulletNum >= self.role_list[mobile_index].totalBulletNum:
-                            print("子弹不足,跳出发射子弹的循环！！")
-                            break
-                        b=bullet(self.screen_surf,oriX,oriY,tarX,tarY)#创建子弹
-                        self.role_list[mobile_index].fireBulletNum+=1
-                        i+=1
-                        while not b.judgeBullet():#没有击中目标/没有超出射程
-                            self.clock.tick(5)
-                            b.displayBullet()
-                            b.moveBullet()
-                            pygame.display.update()
-                            self.event_handler()
-                            # 画面更新
-                            self.game_map.draw_bottom(self.screen_surf)
-                            for mobile in self.role_list:
-                                mobile.draw(self.screen_surf, self.game_map.x, self.game_map.y)
-                            self.horizonMenu.draw(self.screen_surf)  # 绘制UI
-                            self.verticalMenu.draw(self.screen_surf)  # 绘制UI
-                    flag = False  # 发射子弹完毕
-                    print(i, "枚发射子弹完毕flag:", flag)
-                    self.role_list[mobile_index].flag = False
-                    print("已经发射子弹数量：", self.role_list[mobile_index].fireBulletNum)
+            elif self.status == 'start':#游戏开始的时候就进行物体的逻辑判断，移动等操作
+                #self.bulletUpdate()#子弹的相关事件触发
 
-            self.event_handler()
+                #之后策略的设置
+                self.init_stratege()
+                # 对当前有了攻击对象的红方物体，进行寻路分配
+                for set_role in self.red_list:
+                    #print("路径",set_role.next_mx, set_role.next_my)
+                    set_role.find_path(self.game_map, (set_role.dest_mx, set_role.dest_my),self.screen_surf)
+
+                for mobile in self.red_list+self.blue_list:
+                    mobile.logic()
+                self.set_bullet_blue()
+                self.load_bullet_red()
+                self.load_bullet_blue()
+
+
             # 画面更新
-            self.game_map.draw_bottom(self.screen_surf)
-            #是否有正在拖拽的物体
-            if self.moving_object:
-
-                m_x, m_y = pygame.mouse.get_pos()#获取鼠标点击位置
-                mx = (m_x - self.game_map.x) // 32 #获取位置对应的二维数组下标
-                my = (m_y - self.game_map.y) // 32
-                self.moving_object.show(mx, my)#重新设置物体的格子位置
-                self.moving_object.draw(self.screen_surf, self.game_map.x, self.game_map.y)
-            # else:
             #如果没有正在拖拽的物体，就不断刷新当前场上的物体
-            for mobile in self.role_list:
-                mobile.draw(self.screen_surf, self.game_map.x, self.game_map.y)
-                # mobile.has_showed = True
-
-            # self.game_map.draw_top(self.screen_surf)
-            #self.game_map.draw_grid(self.screen_surf)
+            self.load_camp(self.red_list)
+            self.load_camp(self.blue_list)
 
             self.horizonMenu.draw(self.screen_surf)#绘制UI
             self.verticalMenu.draw(self.screen_surf)#绘制UI
@@ -158,91 +192,53 @@ class Game:
 
     #处理触发的事件
     def event_handler(self):
+        """
+        这个函数只检测是否有点击UI，拖拽物体等操作。
+        :return:
+        """
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+
+            if event.type == pygame.QUIT:#如果触发了退出事件，则退出。
                 sys.exit()
 
             #如果鼠标点击了
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                mouse_x, mouse_y = pygame.mouse.get_pos()
-
+                mouse_x, mouse_y = pygame.mouse.get_pos()#获取鼠标点击的位置x,y
 
                 #获取当前鼠标所在格子
                 mx = (mouse_x - self.game_map.x) // 32
                 my = (mouse_y - self.game_map.y) // 32
-                print("点击",mx,my )
+                #print("点击",mx,my )
                 #如果当前拖拽的物体放置下来了
                 if self.moving_object:
-                    print("check1")
-                    #已放置好，将其添加到角色列表
-                    self.role_list.append(self.moving_object)
-                    # self.role.show(mx,my)
-                    #将拖拽ui物体重新置为空
+
+                    # 已放置好，将其添加到角色列表
+                    if self.moving_object.camp == "blue":  # 如果是蓝方，就添加到蓝方列表
+                        self.blue_list.append(self.moving_object)
+                    elif self.moving_object.camp =="red" :  # 如果是红方，就添加到红方列表
+                        self.red_list.append(self.moving_object)
+                    # 将拖拽ui物体重新置为空，不影响下次拖拽
                     self.moving_object = None
 
-
-                #如果当前没有在拖拽物体，这是一个基本状态
+                # 如果当前没有在拖拽物体，这是一个基本状态
                 else:
-                    #判断当前是否在点击水平按钮
+                    # 判断当前是否在点击水平按钮
                     side_menu_button = self.horizonMenu.get_clicked(mouse_x, mouse_y)
-                    #判断当前是否在点击垂直按钮
+                    # 判断当前是否在点击垂直按钮
                     verti_menu_button = self.verticalMenu.get_clicked(mouse_x,mouse_y)
-
-                    #判断当前是否在点击一个物体
-                    candidate_role = self.choose_role(mouse_x, mouse_y)
-
-                    # 如果点击了一个空地
-                    if candidate_role is None:
-                        #如果当前存在一个未设置目标的攻击者，就把当前点击的空地位置传给他
-                        #此处也就完成了我们的攻击方式第二步，设置攻击的目标位置
-                        #因此需要将moving_candidate置为空，方便对下一个点击的物体操作
-
-                        # 初始化当前正在寻路的物体列表
-                        #self.candidate_list = []
-
-                        # 我们的攻击操作是先点击攻击者，再点击攻击目标，此处为是否有未设置目标的攻击者
-                        #self.moving_candidate = None
-
-                        print(" canddidate if", self.candidate_list)
-                       # print(self.moving_candidate,self.moving_candidate.set_dest)
-                        if self.moving_candidate and self.moving_candidate.set_dest is False:
-                            print("if moving", self.moving_candidate)
-                            self.moving_candidate.dest_mx = mx
-                            self.moving_candidate.dest_my = my
-                            self.moving_candidate.set_dest = True
-                            self.moving_candidate.choose = False
-                            self.moving_candidate = None
-
-                    #如果当前点击了一个物体，就该给他分配攻击对象了
-                    else:
-                        candidate_role.choose = True
-                        print("canddidate  else",self.candidate_list)
-                        #我们将所有正在去攻击对象的路上的物体存放在candidate_list中
-                        #因为我们可能再一次点击他，表示要重新给他分配攻击对象
-                        #因此标志位set_dest置为false
-                        if candidate_role in self.candidate_list:
-                            candidate_role.set_dest = False
-                        #如果当前选择的是没有攻击过别人的物体，就加入列表
-                        else:
-                            self.candidate_list.append(candidate_role)
-                        #将点击的物体作为待分配攻击对象的候选者moving_candidate
-                        self.moving_candidate = candidate_role
 
                     # 菜单的点击
                     if side_menu_button:
-                        print("side_menu_button",side_menu_button)
-                        #点击的是水平菜单中的按钮就触发相应事件
+                        #print("side_menu_button",side_menu_button)
+                        # 点击的是水平菜单中的按钮就触发相应事件
                         self.add_weapon(side_menu_button)
 
-                    #如果是垂直菜单按钮
+                    # 如果是垂直菜单按钮
                     if verti_menu_button:
-                        print(verti_menu_button)
+                        # 点击的是垂直主菜单中的按钮就触发相应事件
+                        self.clicked_main_menu(verti_menu_button)
 
-                    #对当前有了攻击对象的物体，进行寻路分配
-                    for set_role in self.candidate_list:
 
-                        print("路径",set_role.next_mx, set_role.next_my)
-                        set_role.find_path(self.game_map, (set_role.dest_mx, set_role.dest_my),self.screen_surf)
 
     def add_weapon(self, name):
         x, y = pygame.mouse.get_pos()
@@ -251,41 +247,35 @@ class Game:
         mx = (x - self.game_map.x) // 32
         my = (y - self.game_map.y) // 32
 
-        # 这里就是涉及到武器，人物的初始化了
-        object_list = []
-
         try:
             role = pygame.image.load('./source/img/character/hero.png').convert_alpha()
-
-
             #zmy 添加range,range = 100
             if (name =='Blue_solder') | (name=="Blue_weapon3") | (name=="Blue_weapon2") :
-                obj = CharWalk(role, role_index_list[name_list.index(name)], CharWalk.DIR_DOWN, mx, my, 50, 'blue',self.screen_surf)
+                obj = CharWalk(role, role_index_list[name_list.index(name)], CharWalk.DIR_DOWN, mx, my, 150, 'blue',self.screen_surf)
             else :
-                obj = CharWalk(role, role_index_list[name_list.index(name)], CharWalk.DIR_DOWN, mx, my, 50, 'red',self.screen_surf)
-
+                obj = CharWalk(role, role_index_list[name_list.index(name)], CharWalk.DIR_DOWN, mx, my, 100, 'red',self.screen_surf)
             self.moving_object = obj
-            # obj.moving = True
         except Exception as e:
             print(str(e) + "NOT VALID NAME")
 
-    def add(self, name):
-        x, y = pygame.mouse.get_pos()
-        name_list = ["Blue_solder", "Blue_weapon3", "Blue_weapon2", "Red_weapon2", "Red_weapon1", "Red_solder"]
+    def clicked_main_menu(self, name):
+        """
+        主菜单点击触发事件
+        :param name: 按键名称
+        :return:
+        """
 
-        # 这里就是涉及到武器，人物的初始化了
-        object_list = []
-        # object_list = [ArcherTowerLong(x,y), ArcherTowerShort(x,y), DamageTower(x,y), RangeTower(x,y)]
+        if name == "start" or "pause":
+            self.status = name
+        if name == "other":
+            for role in self.red_list+self.blue_list:
+                #print(role.isSelect)
+                role.isSelect = not role.isSelect
 
-        try:
-            obj = object_list[name_list.index(name)]
-            self.moving_object = obj
-            obj.moving = True
-        except Exception as e:
-            print(str(e) + "NOT VALID NAME")
+        print(name)
 
-    def choose_role(self, x, y):
-        for candidate_role in self.role_list:
+    def choose_role(self,role_list, x, y):
+        for candidate_role in role_list:
             if candidate_role.get_clicked(x, y):
                 return candidate_role
         return None

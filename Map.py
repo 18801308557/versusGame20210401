@@ -31,21 +31,17 @@ class GameMap(Array2D):
     游戏地图类
     """
 
-    def __init__(self, bottom, top, x, y):
+    def __init__(self, bottom, x, y):
         # 将地图划分成w*h个小格子，每个格子32*32像素
         w = int(bottom.get_width() / 32)
         h = int(bottom.get_height() / 32)
         super().__init__(w, h)
         self.bottom = bottom
-        self.top = top
         self.x = x
         self.y = y
 
     def draw_bottom(self, screen_surf):
         screen_surf.blit(self.bottom, (self.x, self.y))
-
-    def draw_top(self, screen_surf):
-        screen_surf.blit(self.top, (self.x, self.y))
 
     def draw_grid(self, screen_surf):
         """
