@@ -1,6 +1,7 @@
 import sys
 import os
 import pygame
+import random
 from Map import  GameMap
 from mobile_carrier.solder_new import  CharWalk, Sprite
 from menu.menu import horizontalMenu
@@ -144,12 +145,26 @@ class Game:
                     #print(dst.x,dst.y)
                     src.shot(dst.mx,dst.my)#如果范围内存在物体，就攻击他（此处也需要考虑一些问题，比如是否先毁灭范围内一个物体，还是每个都打）
 
+    #初始化蓝方阵营，随机在地图的格子中放3个蓝方
+    def random_set_blue(self):
+        index=[]
+        while len(index)<= 2 :
+            x = random.randint(2,self.game_map.w/2-2) #规定蓝方的位置在地图左半部分
+            y = random.randint(2,self.game_map.h-2) #为了保证让生成的3个位置距离至少是2个格子，在if判断中使用了[x+2,y+2],-2就是为了保证+2时不超过边界
+            if self.game_map[x][y] == 0 & ([x,y] not in index)&([x+2,y+2] not in index): #不能放置在有障碍的格子中，格子也不能重复
+                index.append([x,y])
+        role = pygame.image.load('./source/img/character/hero.png').convert_alpha()
+        role_index_list = [6, 9, 48, 51, 54, 57]
+        for arr in index :
+            obj = CharWalk(role, role_index_list[0], CharWalk.DIR_DOWN, arr[0], arr[1], 100, 'blue',self.screen_surf)
+            self.blue_list.append(obj)
 
     def update(self):
         """
         更新相关事件
         :return:
         """
+        self.random_set_blue()
         while True:
             self.clock.tick(self.fps)#更新时钟
 
