@@ -187,8 +187,12 @@ class Game:
 
                 #之后策略的设置
                 self.init_stratege()
-                # 对当前有了攻击对象的红方物体，进行寻路分配
+                # 移动的过程中检测蓝方有没有物体
                 for set_role in self.red_list:
+                    for dst in self.blue_list:  # 遍历红方阵营
+                        if positionFunc.distanceInR(set_role.x, set_role.y, set_role.range, dst.x, dst.y):  # 检测是否有物体存在于可攻击范围内
+                            set_role.dest_mx = dst.mx
+                            set_role.dest_my = dst.my
                     #print("路径",set_role.next_mx, set_role.next_my)
                     set_role.find_path(self.game_map, (set_role.dest_mx, set_role.dest_my),self.screen_surf)
 
