@@ -5,7 +5,7 @@ import random
 from Map import  GameMap
 from mobile_carrier.solder_new import  CharWalk, Sprite
 from menu.menu import horizontalMenu
-from  weapons.bullet import bullet
+from  mobile_carrier.BaseBuild import BaseBuild
 import positionFunc
 side_img = pygame.transform.scale(pygame.image.load("./source/img/menu/bg1.png"), (640, 70))
 vertical_img = pygame.transform.scale(pygame.image.load("./source/img/menu/vbg.png"), (70,640))
@@ -19,7 +19,7 @@ Start_button = pygame.transform.scale(pygame.image.load("./source/img/menu/start
 pause_button = pygame.transform.scale(pygame.image.load("./source/img/menu/pause.png"), (64, 64))
 other_button = pygame.transform.scale(pygame.image.load("./source/img/menu/othersetting.png"), (64, 64))
 
-
+building = pygame.transform.scale(pygame.image.load("./source/Buildings/Academy/mageguild2.png"), (64, 64))
 
 class Game:
     def __init__(self, title, width, height, fps=60):
@@ -153,10 +153,13 @@ class Game:
             y = random.randint(2,self.game_map.h-2) #为了保证让生成的3个位置距离至少是2个格子，在if判断中使用了[x+2,y+2],-2就是为了保证+2时不超过边界
             if self.game_map[x][y] == 0 & ([x,y] not in index)&([x+2,y+2] not in index): #不能放置在有障碍的格子中，格子也不能重复
                 index.append([x,y])
-        role = pygame.image.load('./source/img/character/hero.png').convert_alpha()
+        #role = pygame.image.load('./source/img/character/hero.png').convert_alpha()
+        role = pygame.transform.scale(pygame.image.load("./source/Buildings/Academy/mageguild2.png"), (64, 64))
+        #role=pygame.image.load('./source/img/character/pic/17.png')
         role_index_list = [6, 9, 48, 51, 54, 57]
         for arr in index :
-            obj = CharWalk(role, role_index_list[0], CharWalk.DIR_DOWN, arr[0], arr[1], 100, 'blue',self.screen_surf)
+            obj = BaseBuild(building, role_index_list[0], arr[0], arr[1], 150, 'blue', self.screen_surf)
+            #obj = CharWalk(role, role_index_list[0], CharWalk.DIR_DOWN, arr[0], arr[1], 100, 'blue',self.screen_surf)
             self.blue_list.append(obj)
 
     def update(self):
@@ -266,7 +269,8 @@ class Game:
             role = pygame.image.load('./source/img/character/hero.png').convert_alpha()
             #zmy 添加range,range = 100
             if (name =='Blue_solder') | (name=="Blue_weapon3") | (name=="Blue_weapon2") :
-                obj = CharWalk(role, role_index_list[name_list.index(name)], CharWalk.DIR_DOWN, mx, my, 150, 'blue',self.screen_surf)
+                #obj = CharWalk(role, role_index_list[name_list.index(name)], CharWalk.DIR_DOWN, mx, my, 150, 'blue',self.screen_surf)
+                obj = BaseBuild(building, 1, mx, my, 150, 'blue', self.screen_surf)
             else :
                 obj = CharWalk(role, role_index_list[name_list.index(name)], CharWalk.DIR_DOWN, mx, my, 100, 'red',self.screen_surf)
             self.moving_object = obj
