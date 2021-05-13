@@ -77,7 +77,10 @@ class bullet():
         #print("方向=", self.direction)
         #print("起点：(", self.currentX, ",", self.currentY, ");终点：", self.targetX, ",", self.targetY, ")")
         # 移动 1:右 2 左 3 下  4上
-
+        #移动过程中判断是否有没有击中，击中的话则不存活并返回
+        if self.currentX == self.targetX and self.currentY == self.targetY:
+            self.live = False
+            return
         #y方向没有变化，x方向移动
         if self.delt_y==0:
             #print("1")
