@@ -19,7 +19,7 @@ Start_button = pygame.transform.scale(pygame.image.load("./source/img/menu/start
 pause_button = pygame.transform.scale(pygame.image.load("./source/img/menu/pause.png"), (64, 64))
 other_button = pygame.transform.scale(pygame.image.load("./source/img/menu/othersetting.png"), (64, 64))
 
-building = pygame.transform.scale(pygame.image.load("./source/Buildings/Academy/mageguild2.png"), (64, 64))
+building = pygame.transform.scale(pygame.image.load("./source/Buildings/Academy/mageguild2.png"), (32, 32))
 
 class Game:
     def __init__(self, title, width, height, fps=60):
@@ -91,7 +91,7 @@ class Game:
         self.game_map = GameMap(self.map_bottom, 0, 0) # 根据当前地图相关参数进行地图初始化
         self.game_map.load_walk_file('./source/img/map/1.map')#根据地图的显示，我们规定了一些不可到达的区域，导入该文件。
 
-
+#
     # 直接将红蓝双方进行一一配对，在之后的策略中需要改进该函数
     def init_stratege(self):
         #将红方蓝方目标体一一对应（也就是之后需要做的策略）
@@ -288,7 +288,7 @@ class Game:
         :return:
         """
 
-        if name == "start" or "pause":
+        if name in ( "start" ,"pause"):
             self.status = name
         if name == "other":
             for role in self.red_list+self.blue_list:
