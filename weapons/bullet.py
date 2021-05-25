@@ -41,16 +41,16 @@ class bullet():
     def getDirection(self):
         if self.currentX < self.targetX and self.currentY == self.targetY:  # 起点在终点的左上
             self.direction=1#向右
-            print("向右移动")
+            #print("向右移动")
         if self.currentX > self.targetX and self.currentY == self.targetY:  # 起点在终点的左上
             self.direction=2#向左
-            print("向左移动")
+            #print("向左移动")
         if self.currentX == self.targetX and self.currentY > self.targetY:  # 起点在终点的左上
             self.direction=3#向下
-            print("向下移动")
+            #print("向下移动")
         if self.currentX == self.targetX and self.currentY < self.targetY:  # 起点在终点的左上
             self.direction=4#向上
-            print("向上移动")
+            #print("向上移动")
 
     def judgeBullet(self):#判断子弹是否击中
         if self.currentX==self.targetX and self.currentY==self.targetY:

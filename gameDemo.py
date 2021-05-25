@@ -7,6 +7,8 @@ from mobile_carrier.solder_new import  CharWalk, Sprite
 from menu.menu import horizontalMenu
 from  mobile_carrier.BaseBuild import BaseBuild
 import positionFunc
+import pygame_menu
+
 side_img = pygame.transform.scale(pygame.image.load("./source/img/menu/bg1.png"), (640, 70))
 vertical_img = pygame.transform.scale(pygame.image.load("./source/img/menu/vbg.png"), (70,640))
 Blue_solder = pygame.transform.scale(pygame.image.load("./source/img/menu/Blue_solder.png"), (64, 64))
@@ -30,15 +32,20 @@ class Game:
         :param fps: 游戏每秒刷新次数
         :param status: 游戏状态
         """
+        self.show_attack =True;
+        self.score = 0#得分
+        self.source = 10000#可用资源数
         self.title = title
         self.width = width
         self.height = height
         self.screen_surf = None
         self.fps = fps
-        self.status = 'pause'#游戏状态默认为暂停
+        self.status = 'stop'#游戏状态默认为暂停
         self.__init_pygame()
         self.__init_game()
 
+
+        self.main_menu = None
         #wzq水平菜单的初始化
         self.horizonMenu = horizontalMenu(0, self.height - side_img.get_height(), side_img,'horizon')
         #水平菜单添加按键
@@ -173,7 +180,7 @@ class Game:
 
             self.event_handler()#处理游戏点击等事件
             self.game_map.draw_bottom(self.screen_surf)# 画面更新
-            if self.status == 'pause':#游戏暂停的时候可以进行布局
+            if self.status == 'stop':#游戏暂停的时候可以进行布局
                 #是否有正在拖拽的物体
                 if self.moving_object:
                     m_x, m_y = pygame.mouse.get_pos()#获取鼠标点击位置
@@ -181,6 +188,7 @@ class Game:
                     my = (m_y - self.game_map.y) // 32
                     self.moving_object.show(mx, my)#重新设置物体的格子位置
                     self.moving_object.draw(self.screen_surf, self.game_map.x, self.game_map.y)
+
 
             elif self.status == 'start':#游戏开始的时候就进行物体的逻辑判断，移动等操作
                 #self.bulletUpdate()#子弹的相关事件触发
@@ -207,9 +215,17 @@ class Game:
             #如果没有正在拖拽的物体，就不断刷新当前场上的物体
             self.load_camp(self.red_list)
             self.load_camp(self.blue_list)
-
+            """
+            if self.main_menu and self.main_menu.is_enabled():
+                self.main_menu.draw(self.screen_surf)
+            """
             self.horizonMenu.draw(self.screen_surf)#绘制UI
             self.verticalMenu.draw(self.screen_surf)#绘制UI
+            if self.status=='pause':
+                if self.main_menu and self.main_menu.is_enabled():
+
+                    self.main_menu.draw(self.screen_surf)
+
             pygame.display.update()
 
     #处理触发的事件
@@ -218,13 +234,19 @@ class Game:
         这个函数只检测是否有点击UI，拖拽物体等操作。
         :return:
         """
+        if self.main_menu and self.main_menu.is_enabled():
+
+            self.main_menu.update(pygame.event.get())
         for event in pygame.event.get():
+
+
+
 
             if event.type == pygame.QUIT:#如果触发了退出事件，则退出。
                 sys.exit()
 
             #如果鼠标点击了
-            elif event.type == pygame.MOUSEBUTTONDOWN:
+            elif event.type == pygame.MOUSEBUTTONDOWN and self.status is not 'pause':
                 mouse_x, mouse_y = pygame.mouse.get_pos()#获取鼠标点击的位置x,y
 
                 #获取当前鼠标所在格子
@@ -288,12 +310,12 @@ class Game:
         :return:
         """
 
-        if name in ( "start" ,"pause"):
+        if name == "start" :
             self.status = name
-        if name == "other":
-            for role in self.red_list+self.blue_list:
-                #print(role.isSelect)
-                role.isSelect = not role.isSelect
+        elif name == "pause":
+
+            self.create_mainmenu()
+            self.status = name
 
         print(name)
 
@@ -303,6 +325,34 @@ class Game:
                 return candidate_role
         return None
 
+    def continueGame(self):
 
+        if self.main_menu:
+            self.status = 'start'
+            #print("okokokkoko")
+            self.main_menu.disable()
+
+
+    def create_mainmenu(self):
+        #print("hello")
+        self.main_menu = pygame_menu.Menu(300,400,'Main Menu',theme=pygame_menu.themes.THEME_BLUE)
+        score = 'score:  '+ str(self.score)
+        source = 'source: ' +str(self.source)
+        self.main_menu.add.toggle_switch('Attack Range',onchange=self.show_attackRange())
+        self.main_menu.add.label(score,max_char=-1,font_size=20)
+        self.main_menu.add.label(source,max_char=-1,font_size=20)
+        self.main_menu.add.button('Continue',self.continueGame)
+        self.main_menu.add.button('Quit', pygame_menu.events.EXIT)
+    #wzq 更改显示状态
+    def show_attackRange(self):
+        #print("hello")
+        self.show_attack = not self.show_attack
+        for role in self.red_list+self.blue_list:
+            #print(role.isSelect)
+            role.isSelect = self.show_attack
+
+
+"""
 if __name__ == '__main__':
     Game("versus", 710, 550)
+"""
