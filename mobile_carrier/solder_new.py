@@ -33,7 +33,7 @@ class CharWalk:
     DIR_RIGHT = 2
     DIR_UP = 3
 
-    def __init__(self, hero_surf, char_id, dir, mx, my, range,camp,screen):
+    def __init__(self, hero_surf, char_id, dir, mx, my, range,cost,camp,screen):
         """
         :param hero_surf: 精灵图的surface
         :param char_id: 角色id
@@ -47,6 +47,7 @@ class CharWalk:
         self.hero_surf = hero_surf
         self.char_id = char_id
         self.dir = dir
+        self.cost =cost
         self.mx = mx
         self.my = my
         self.range = range
@@ -56,7 +57,7 @@ class CharWalk:
         self.fireBulletNum=0
         self.health = 100 #现有血量
         self.max_health = 100 # 初始血量
-        self.isSelect = True
+        self.isSelect = False
         self.live = True #物体是否存活
 
         self.is_walking = False  # 角色是否正在移动

@@ -20,7 +20,7 @@ Red_weapon1 = pygame.transform.scale(pygame.image.load("./source/img/menu/weapon
 Start_button = pygame.transform.scale(pygame.image.load("./source/img/menu/start.png"), (64, 64))
 pause_button = pygame.transform.scale(pygame.image.load("./source/img/menu/pause.png"), (64, 64))
 other_button = pygame.transform.scale(pygame.image.load("./source/img/menu/othersetting.png"), (64, 64))
-
+font = pygame.font.Font("./source/font/msyh.ttc", 12)
 building = pygame.transform.scale(pygame.image.load("./source/Buildings/Academy/mageguild2.png"), (32, 32))
 
 class Game:
@@ -32,9 +32,9 @@ class Game:
         :param fps: 游戏每秒刷新次数
         :param status: 游戏状态
         """
-        self.show_attack =True;
+        self.show_attack =False
         self.score = 0#得分
-        self.source = 10000#可用资源数
+        self.source = 1000#可用资源数
         self.title = title
         self.width = width
         self.height = height
@@ -46,6 +46,7 @@ class Game:
 
 
         self.main_menu = None
+        self.gameover_menu =None
         #wzq水平菜单的初始化
         self.horizonMenu = horizontalMenu(0, self.height - side_img.get_height(), side_img,'horizon')
         #水平菜单添加按键
@@ -64,7 +65,8 @@ class Game:
         self.verticalMenu.add_btn(other_button,"other",0)#其他按钮
         #初始化角色列表
         #self.role_list = []
-
+        self.blue_bullet= 0
+        self.red_bullet =0
         self.red_list = []#初始化红方角色列表
         self.blue_list = []#初始化蓝方角色列表
         self.weapon_list = []#初始化武器列表
@@ -102,13 +104,22 @@ class Game:
     # 直接将红蓝双方进行一一配对，在之后的策略中需要改进该函数
     def init_stratege(self):
         #将红方蓝方目标体一一对应（也就是之后需要做的策略）
-        for red_army,blue_army in zip(self.red_list,self.blue_list):
+
+        for red in self.red_list:
+            distance = 100000
+            for blue in self.blue_list:
+                cur = positionFunc.distanceCal(red.mx,red.my,blue.mx,blue.my)
+                if cur<=distance:
+                    distance = cur
+                    red.dest_mx = blue.mx
+                    red.dest_my = blue.my
+        """for red_army,blue_army in zip(self.red_list,self.blue_list):
             #看是否设置过了目标
             #if not red_army.set_dest:
                 #print(red_army,blue_army)
             red_army.dest_mx = blue_army.mx
             red_army.dest_my = blue_army.my
-                #red_army.set_dest  =True
+                #red_army.set_dest  =True"""
 
     # 将阵营中物体显示出来 并更新是否存活
     def load_camp(self,camp):
@@ -122,7 +133,9 @@ class Game:
 
     # 红方子弹绘制  将子弹显示出来，并更新子弹是否需要继续发射
     def load_bullet_red(self):
+        self.red_bullet = 0
         for role in self.red_list:#遍历红方阵营
+            self.red_bullet +=role.totalBulletNum
             for b in role.bullet_list:#对于每一个士兵其存有一个子弹list
                 target = self.choose_role(self.blue_list,b.targetX,b.targetY)#需要攻击的位置是否存在物体
                 if b.live and target:#如果当前子弹没有到目标位置（也就是存活） 且目标地址存在物体（因为蓝方是静止的，如果不存在物体说明已经消灭）
@@ -135,7 +148,9 @@ class Game:
 
     #蓝方子弹绘制  将子弹显示出来，并更新子弹是否需要继续发射
     def load_bullet_blue(self):
+        self.blue_bullet = 0
         for role in self.blue_list:#遍历蓝方阵营
+            self.blue_bullet+=role.totalBulletNum
             for b in role.bullet_list:#对于每一个士兵其存有一个子弹list
                 target = self.choose_role(self.red_list,b.targetX,b.targetY)#需要攻击的位置是否存在物体
                 if b.live:#与红方判断条件区别开来（目前的设定是不跟踪的，因为红方是移动方，所以子弹不一定会打中红方）
@@ -168,6 +183,7 @@ class Game:
         for arr in index :
             obj = BaseBuild(building, role_index_list[0], arr[0], arr[1], 150, 'blue', self.screen_surf)
             #obj = CharWalk(role, role_index_list[0], CharWalk.DIR_DOWN, arr[0], arr[1], 100, 'blue',self.screen_surf)
+            self.blue_bullet+=obj.totalBulletNum
             self.blue_list.append(obj)
 
     def update(self):
@@ -178,6 +194,7 @@ class Game:
         self.random_set_blue()
         while True:
             self.clock.tick(self.fps)#更新时钟
+            self.checkGameOver()
 
             self.event_handler()#处理游戏点击等事件
             self.game_map.draw_bottom(self.screen_surf)# 画面更新
@@ -222,6 +239,10 @@ class Game:
             """
             self.horizonMenu.draw(self.screen_surf)#绘制UI
             self.verticalMenu.draw(self.screen_surf)#绘制UI
+            self.show_inform()
+            self.draw_army_inform()
+            if self.gameover_menu and self.gameover_menu.is_enabled():
+                self.gameover_menu.draw(self.screen_surf)
             if self.status=='pause':
                 if self.main_menu and self.main_menu.is_enabled():
                     self.main_menu.draw(self.screen_surf)
@@ -233,6 +254,10 @@ class Game:
         这个函数只检测是否有点击UI，拖拽物体等操作。
         :return:
         """
+        if self.gameover_menu and self.gameover_menu.is_enabled():
+            self.gameover_menu.update(pygame.event.get())
+
+
         if self.main_menu and self.main_menu.is_enabled():
             self.main_menu.update(pygame.event.get())
         for event in pygame.event.get():
@@ -250,12 +275,15 @@ class Game:
                 #print("点击",mx,my )
                 #如果当前拖拽的物体放置下来了
                 if self.moving_object:
+
                     # 已放置好，将其添加到角色列表
                     if self.moving_object.camp == "blue":  # 如果是蓝方，就添加到蓝方列表
                         self.blue_list.append(self.moving_object)
                     elif self.moving_object.camp =="red" :  # 如果是红方，就添加到红方列表
                         self.red_list.append(self.moving_object)
                     # 将拖拽ui物体重新置为空，不影响下次拖拽
+                    self.source -= self.moving_object.cost
+                    self.red_bullet +=self.moving_object.totalBulletNum
                     self.moving_object = None
 
                 # 如果当前没有在拖拽物体，这是一个基本状态
@@ -292,23 +320,17 @@ class Game:
                 #obj = CharWalk(role, role_index_list[name_list.index(name)], CharWalk.DIR_DOWN, mx, my, 150, 'blue',self.screen_surf)
                 obj = BaseBuild(building, 1, mx, my, 150, 'blue', self.screen_surf)
             elif (name == 'Red_solder'):   #士兵的攻击范围是50,需要消耗的资源数是80
-                if(self.source <80):  #资源数不够80
-                    pass
-                else:
-                     obj = CharWalk(role, role_index_list[name_list.index(name)], CharWalk.DIR_DOWN, mx, my, 50, 'red',self.screen_surf)
-                     self.source -= 80
+                if(self.source >=80):  #资源数不够80
+                     obj = CharWalk(role, role_index_list[name_list.index(name)], CharWalk.DIR_DOWN, mx, my, 50,80, 'red',self.screen_surf)
+
             elif (name == 'Red_weapon1'):  #weapon1的攻击范围是70，需要消耗的资源数是120
-                if (self.source < 120):  # 资源数不够120
-                    pass
-                else:
-                    self.source -= 120
-                    obj = CharWalk(role, role_index_list[name_list.index(name)], CharWalk.DIR_DOWN, mx, my, 70, 'red',self.screen_surf)
+                if (self.source >= 120):  # 资源数不够120
+
+                    obj = CharWalk(role, role_index_list[name_list.index(name)], CharWalk.DIR_DOWN, mx, my, 70,120, 'red',self.screen_surf)
             elif (name == 'Red_weapon2'):  # weapon2的攻击范围是100，，需要消耗的资源数是200
-                if (self.source < 200):  # 资源数不够200
-                    pass
-                else:
-                    self.source -= 200
-                    obj = CharWalk(role, role_index_list[name_list.index(name)], CharWalk.DIR_DOWN, mx, my, 100, 'red',self.screen_surf)
+                if (self.source >= 200):  # 资源数不够200
+
+                    obj = CharWalk(role, role_index_list[name_list.index(name)], CharWalk.DIR_DOWN, mx, my, 100,200, 'red',self.screen_surf)
             self.moving_object = obj
         except Exception as e:
             print(str(e) + "NOT VALID NAME")
@@ -335,6 +357,67 @@ class Game:
                 return candidate_role
         return None
 
+
+    def show_inform(self):
+        # draw lives
+        lives_img =  pygame.transform.scale(pygame.image.load("./source/img/menu/live.png"), (50, 50))
+        text = pygame.font.SysFont("comicsans", 30).render(str(self.score), 1, (255,255,255))
+        life = pygame.transform.scale(lives_img,(30,30))
+        start_x = self.map_bottom.get_width() - life.get_width() - 10
+
+        self.screen_surf.blit(text, (start_x - text.get_width() - 10, 13))
+        self.screen_surf.blit(life, (start_x, 5))
+
+        # draw money
+        star_img =  pygame.transform.scale(pygame.image.load("./source/img/menu/money.png"), (50, 50))
+        text = pygame.font.SysFont("comicsans", 30).render(str(self.source), 1, (255, 255, 255))
+        money = pygame.transform.scale(star_img, (30, 30))
+        start_x = self.map_bottom.get_width() - life.get_width() - 10
+
+        self.screen_surf.blit(text, (start_x - text.get_width() - 10, 45))
+        self.screen_surf.blit(money, (start_x, 35))
+
+    def checkGameOver(self):
+        if self.gameover_menu is None:
+            if (self.source<80 and len(self.red_list)==0) or len(self.blue_list)==0:
+                self.gameover_menu = pygame_menu.Menu(300,400,'game over',theme=pygame_menu.themes.THEME_SOLARIZED)
+                score = 'score:  '+ str(self.score)
+                source = 'source: ' +str(self.source)
+                self.gameover_menu.add.label(score,max_char=-1,font_size=20)
+                self.gameover_menu.add.label(source,max_char=-1,font_size=20)
+                self.gameover_menu.add.button('Main Menu',self.continueGame)
+                self.gameover_menu.add.button('Quit', pygame_menu.events.EXIT)
+
+    def draw_army_inform(self):
+        block_red = [self.map_bottom.get_width()- 200,self.map_bottom.get_height()-100]
+
+        #矩形长宽
+        block_width = 100
+        #self.screen_surf.fill((0,0,0))
+        #绘制两个矩形区域
+        pygame.draw.rect(self.screen_surf,[255,0,0],[block_red[0],block_red[1],block_width,block_width],2)
+        pygame.draw.rect(self.screen_surf,[255,0,0],[block_red[0],block_red[1],block_width+block_width,block_width],2)
+        GOLD=255,251,0
+        idx = 0
+        show_information_list =["weapon","bullet"]
+        red_inform = [len(self.red_list),self.red_bullet]
+        blue_inform = [len(self.blue_list),self.blue_bullet]
+        for i in show_information_list:
+            #红方
+            self.screen_surf.blit(font.render(str(i),1,GOLD),[block_red[0],block_red[1]+idx*15])
+            self.screen_surf.blit(font.render(str(red_inform[show_information_list.index(i)]),1,GOLD),[block_red[0]+block_width-40,block_red[1]+idx*15])
+            #蓝方
+            self.screen_surf.blit(font.render(str(i),1,GOLD),[block_red[0]+block_width,block_red[1]+idx*15])
+            self.screen_surf.blit(font.render(str(blue_inform[show_information_list.index(i)]),1,GOLD),[block_red[0]+block_width*2-40,block_red[1]+idx*15])
+            idx = idx+1
+
+    def putStratage(self):
+        if self.main_menu:
+            self.status = 'stop'
+            #print("okokokkoko")
+            self.main_menu.disable()
+
+
     def continueGame(self):
 
         if self.main_menu:
@@ -345,13 +428,14 @@ class Game:
 
     def create_mainmenu(self):
         #print("hello")
-        self.main_menu = pygame_menu.Menu(300,400,'Main Menu',theme=pygame_menu.themes.THEME_BLUE)
+        self.main_menu = pygame_menu.Menu(350,400,'Main Menu',theme=pygame_menu.themes.THEME_BLUE)
         score = 'score:  '+ str(self.score)
         source = 'source: ' +str(self.source)
         self.main_menu.add.toggle_switch('Attack Range',onchange=self.show_attackRange())
         self.main_menu.add.label(score,max_char=-1,font_size=20)
         self.main_menu.add.label(source,max_char=-1,font_size=20)
         self.main_menu.add.button('Continue',self.continueGame)
+        self.main_menu.add.button('Put',self.putStratage)
         self.main_menu.add.button('Quit', pygame_menu.events.EXIT)
     #wzq 更改显示状态
     def show_attackRange(self):

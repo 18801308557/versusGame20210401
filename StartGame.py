@@ -31,12 +31,12 @@ if __name__ == '__main__':
     pygame.init()
     surface = pygame.display.set_mode((710,550))
     mymenu = pygame_menu.Menu(300,400,'welcome',theme=pygame_menu.themes.THEME_BLUE)
-    mymenu.add_text_input('Name :', default='John Doe')
-    mymenu.add_selector('Difficulty :', [('Hard', 1), ('Easy', 2)],
+    mymenu.add.text_input('Name :', default='BJTU')
+    mymenu.add.selector('Difficulty :', [('Hard', 1), ('Easy', 2)],
                       onchange=set_difficulty)
-    mymenu.add_button('Play', start_the_game)
+    mymenu.add.button('Play', start_the_game)
     #menu.add.toggle_switch('range:',False)
-    mymenu.add_button('Quit', pygame_menu.events.EXIT)
+    mymenu.add.button('Quit', pygame_menu.events.EXIT)
 
     while True:
 

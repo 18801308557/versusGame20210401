@@ -78,7 +78,7 @@ class BaseBuild:
 
         self.draw_radius(screen_surf)
         self.draw_health_bar(screen_surf)
-        print(self.mx,self.my)
+        #print(self.mx,self.my)
         screen_surf.blit(self.hero_surf,(self.mx*32,self.my*32))
 
     def show(self,x,y):
