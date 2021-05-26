@@ -52,8 +52,8 @@ class Game:
         self.horizonMenu.add_btn(Blue_solder, "Blue_solder", 200)
         self.horizonMenu.add_btn(Blue_weapon2, "Blue_weapon2", 200)
         self.horizonMenu.add_btn(Blue_weapon3, "Blue_weapon3", 200)
-        self.horizonMenu.add_btn(Red_solder, "Red_solder", 200)
-        self.horizonMenu.add_btn(Red_weapon1, "Red_weapon1", 200)
+        self.horizonMenu.add_btn(Red_solder, "Red_solder", 80)
+        self.horizonMenu.add_btn(Red_weapon1, "Red_weapon1", 120)
         self.horizonMenu.add_btn(Red_weapon2, "Red_weapon2", 200)
 
         #增加游戏的垂直主菜单，开始暂停
@@ -115,9 +115,10 @@ class Game:
         for army in camp:# 遍历所有阵营
             if army.live:#如果存活就将其绘制在屏幕上
                 army.draw(self.screen_surf, self.game_map.x, self.game_map.y)
-
             else:#如果不存活，就将其删除
                 camp.remove(army)
+                if(army.camp == "blue"):#如果删除的是蓝方阵营的物体，得分就增加200
+                   self.score += 200  # 目标销毁，得分自动加200
 
     # 红方子弹绘制  将子弹显示出来，并更新子弹是否需要继续发射
     def load_bullet_red(self):
@@ -130,6 +131,7 @@ class Game:
                     b.hit_target(target)#检测子弹是否和物体碰撞
                 else:
                     role.bullet_list.remove(b)#子弹发生碰撞后 或目标物体毁灭 子弹就该消失了
+
 
     #蓝方子弹绘制  将子弹显示出来，并更新子弹是否需要继续发射
     def load_bullet_blue(self):
@@ -162,7 +164,6 @@ class Game:
                 index.append([x,y])
         #role = pygame.image.load('./source/img/character/hero.png').convert_alpha()
         role = pygame.transform.scale(pygame.image.load("./source/Buildings/Academy/mageguild2.png"), (64, 64))
-        #role=pygame.image.load('./source/img/character/pic/17.png')
         role_index_list = [6, 9, 48, 51, 54, 57]
         for arr in index :
             obj = BaseBuild(building, role_index_list[0], arr[0], arr[1], 150, 'blue', self.screen_surf)
@@ -223,9 +224,7 @@ class Game:
             self.verticalMenu.draw(self.screen_surf)#绘制UI
             if self.status=='pause':
                 if self.main_menu and self.main_menu.is_enabled():
-
                     self.main_menu.draw(self.screen_surf)
-
             pygame.display.update()
 
     #处理触发的事件
@@ -235,18 +234,14 @@ class Game:
         :return:
         """
         if self.main_menu and self.main_menu.is_enabled():
-
             self.main_menu.update(pygame.event.get())
         for event in pygame.event.get():
-
-
-
 
             if event.type == pygame.QUIT:#如果触发了退出事件，则退出。
                 sys.exit()
 
             #如果鼠标点击了
-            elif event.type == pygame.MOUSEBUTTONDOWN and self.status is not 'pause':
+            elif event.type == pygame.MOUSEBUTTONDOWN and self.status != 'pause':
                 mouse_x, mouse_y = pygame.mouse.get_pos()#获取鼠标点击的位置x,y
 
                 #获取当前鼠标所在格子
@@ -255,7 +250,6 @@ class Game:
                 #print("点击",mx,my )
                 #如果当前拖拽的物体放置下来了
                 if self.moving_object:
-
                     # 已放置好，将其添加到角色列表
                     if self.moving_object.camp == "blue":  # 如果是蓝方，就添加到蓝方列表
                         self.blue_list.append(self.moving_object)
@@ -297,8 +291,24 @@ class Game:
             if (name =='Blue_solder') | (name=="Blue_weapon3") | (name=="Blue_weapon2") :
                 #obj = CharWalk(role, role_index_list[name_list.index(name)], CharWalk.DIR_DOWN, mx, my, 150, 'blue',self.screen_surf)
                 obj = BaseBuild(building, 1, mx, my, 150, 'blue', self.screen_surf)
-            else :
-                obj = CharWalk(role, role_index_list[name_list.index(name)], CharWalk.DIR_DOWN, mx, my, 100, 'red',self.screen_surf)
+            elif (name == 'Red_solder'):   #士兵的攻击范围是50,需要消耗的资源数是80
+                if(self.source <80):  #资源数不够80
+                    pass
+                else:
+                     obj = CharWalk(role, role_index_list[name_list.index(name)], CharWalk.DIR_DOWN, mx, my, 50, 'red',self.screen_surf)
+                     self.source -= 80
+            elif (name == 'Red_weapon1'):  #weapon1的攻击范围是70，需要消耗的资源数是120
+                if (self.source < 120):  # 资源数不够120
+                    pass
+                else:
+                    self.source -= 120
+                    obj = CharWalk(role, role_index_list[name_list.index(name)], CharWalk.DIR_DOWN, mx, my, 70, 'red',self.screen_surf)
+            elif (name == 'Red_weapon2'):  # weapon2的攻击范围是100，，需要消耗的资源数是200
+                if (self.source < 200):  # 资源数不够200
+                    pass
+                else:
+                    self.source -= 200
+                    obj = CharWalk(role, role_index_list[name_list.index(name)], CharWalk.DIR_DOWN, mx, my, 100, 'red',self.screen_surf)
             self.moving_object = obj
         except Exception as e:
             print(str(e) + "NOT VALID NAME")
